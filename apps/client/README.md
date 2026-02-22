@@ -41,7 +41,7 @@ app/ → routing only
 
 components/ → reusable UI
 
-features/ → business logic grouped by domain
+pages/ → UI pages
 
 hooks/ → custom React hooks
 
