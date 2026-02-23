@@ -6,8 +6,8 @@ export type User = {
   email: string;
   major: string;
   education_level: EducationLevel;
-  strengths: string[]; // from DB: strengths
-  needs_help_with: string[]; // from DB: needs_help_with
+  strengths: string[];
+  needs_help_with: string[];
   description?: string;
   token_balance: number;
   created_at: string;
@@ -23,7 +23,7 @@ export const MOCK_USERS: User[] = [
     education_level: 'HBO',
     strengths: ['Java Programming', 'GitLab CI/CD', 'English', 'Dutch', 'Photoshop'],
     needs_help_with: ['C# Programming', 'Python Programming'],
-    description: 'I can help with Java and CI/CD. Looking to improve Python.',
+    description: 'I can help with Java and CI/CD. Looking to improve Python. I can help with Java and CI/CD. Looking to improve Python. I can help with Java and CI/CD. Looking to improve Pythodadsadasdn.',
     token_balance: 3,
     created_at: '2026-02-01T10:00:00Z',
     profile_image_url: 'https://res.cloudinary.com/jerrick/image/upload/v1530566517/finbpjpirbespgfpul19.jpg',

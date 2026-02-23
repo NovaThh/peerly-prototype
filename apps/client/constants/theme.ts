@@ -12,6 +12,9 @@ export const COLORS = {
   searchBar: "#ECE6F0",
   onClickNavBar: "#C9C7C7",
 
+  buttonBlack: "#1F2933",
+  buttonBlackPressed: "#0e1318",
+
   textPrimary: "#1F2933",
   textSecondary: "#52606D",
   textMuted: "#9AA5B1",
