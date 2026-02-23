@@ -1,12 +1,16 @@
 export const COLORS = {
-  primary600: "#239A8C",
+  buttonGreen: "#2CB5A5",
+  buttonGreenPressed: "#239A8C",
   primary100: "#E4F6F3",
 
-  secondary600: "#E2A52F",
+  buttonYellow: "#F4B942",
+  buttonYellowPressed: "#E2A52F",
   secondary100: "#FFF5DF",
 
   background: "#FEF7FF",
   card: "#FFFFFF",
+  searchBar: "#ECE6F0",
+  onClickNavBar: "#C9C7C7",
 
   textPrimary: "#1F2933",
   textSecondary: "#52606D",

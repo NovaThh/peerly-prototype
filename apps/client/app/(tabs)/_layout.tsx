@@ -1,15 +1,20 @@
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { COLORS } from "@/constants/theme";
+import Feather from '@expo/vector-icons/Feather';
 
 export default function TabsLayout() {
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarShowLabel: false,
+      }}
+    >
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Feather name="home" size={size} color={COLORS.textPrimary} />
           ),
         }}
       />
