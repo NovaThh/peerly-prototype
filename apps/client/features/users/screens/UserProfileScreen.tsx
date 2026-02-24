@@ -57,6 +57,7 @@ export default function UserProfileScreen({ userId, mode = 'other' }: Props) {
               borderColor={COLORS.textMuted}
               style={styles.halfButton}
               icon={<Feather name="edit-2" size={16} color={COLORS.textPrimary} />}
+              onPress={() => router.push('/edit')}
             />
 
             <PeerlyButton

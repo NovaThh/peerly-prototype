@@ -51,6 +51,11 @@ export default function TabsLayout() {
         href: null,
       }}
       />
+
+      <Tabs.Screen name="edit" options={{
+        href: null,
+      }}
+      />
     </Tabs>
   );
 }

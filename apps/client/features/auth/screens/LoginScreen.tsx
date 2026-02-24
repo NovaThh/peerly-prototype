@@ -49,7 +49,7 @@ export default function LoginScreen() {
           <TextInput
             value={email}
             onChangeText={setEmail}
-            placeholder="Value"
+            placeholder="Enter Email"
             style={styles.input}
           />
 
@@ -57,7 +57,7 @@ export default function LoginScreen() {
           <TextInput
             value={password}
             onChangeText={setPassword}
-            placeholder="Value"
+            placeholder="Enter Password"
             secureTextEntry
             style={styles.input}
           />
