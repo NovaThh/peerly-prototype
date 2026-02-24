@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from 'expo-router';
-import OtherUserProfileScreen from '@/features/users/screens/OtherUserProfileScreen';
+import UserProfileScreen from '@/features/users/screens/UserProfileScreen';
 
 export default function UserProfileRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  return <OtherUserProfileScreen userId={id} />;
+  return <UserProfileScreen userId={id} mode="other" />;
 }

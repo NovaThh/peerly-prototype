@@ -4,6 +4,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
+  password: string;
   major: string;
   education_level: EducationLevel;
   strengths: string[];
@@ -19,6 +20,7 @@ export const MOCK_USERS: User[] = [
     id: '1',
     name: 'Nhien',
     email: 'nhien@student.nl',
+    password: '123456',
     major: 'ICT',
     education_level: 'HBO',
     strengths: ['Java Programming', 'GitLab CI/CD', 'English', 'Dutch', 'Photoshop'],
@@ -32,6 +34,7 @@ export const MOCK_USERS: User[] = [
     id: '2',
     name: 'Quynh',
     email: 'quynh@student.nl',
+    password: '123456',
     major: 'ICT',
     education_level: 'HBO',
     strengths: ['Java Programming', 'Embedded Programming', 'Accounting'],
@@ -45,6 +48,7 @@ export const MOCK_USERS: User[] = [
     id: '3',
     name: 'Jan',
     email: 'jan@student.nl',
+    password: '123456',
     major: 'ICT',
     education_level: 'HBO',
     strengths: ['Java Programming', 'C# Programming', 'GitLab CI/CD'],
@@ -58,6 +62,7 @@ export const MOCK_USERS: User[] = [
     id: '4',
     name: 'User D',
     email: 'userd@student.nl',
+    password: '123456',
     major: 'ICT',
     education_level: 'HBO',
     strengths: ['Geography', 'History', 'English', 'Dutch', 'Spanish', 'French', 'French', 'French', 'French', 'French', 'French', 'French', 'French', 'French'],
@@ -71,6 +76,7 @@ export const MOCK_USERS: User[] = [
     id: '5',
     name: 'User E',
     email: 'usere@student.nl',
+    password: '123456',
     major: 'Accounting',
     education_level: 'HBO',
     strengths: ['Finance', 'English', 'Advanced Mathematics', 'Accounting'],
