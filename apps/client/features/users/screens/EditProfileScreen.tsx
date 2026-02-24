@@ -102,7 +102,7 @@ export default function EditProfileScreen() {
             <PeerlyButton title="Cancel" backgroundColor={COLORS.red} textColor="#fff" style={{ flex: 1, marginLeft: 6 }} onPress={() => router.replace('/profile')} />
           </View>
 
-          {/* TODO: implement real api */}
+          {/* TODO: implement real api here */}
           <PeerlyButton
             title="Delete Account"
             backgroundColor="transparent"
