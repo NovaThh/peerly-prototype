@@ -21,4 +21,5 @@ export const COLORS = {
   textOnDark: "#FFFFFF",
 
   red: "#B3261E",
+  redPressed: "#831a15",
 };
