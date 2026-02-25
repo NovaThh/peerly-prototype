@@ -72,7 +72,9 @@ export default function LoginScreen() {
           />
 
           <Text style={styles.link}>Forgot password?</Text>
-          <Text style={styles.link}>Register New Account →</Text>
+          <Pressable onPress={() => router.push('/register/credentials')}>
+            <Text style={styles.link}>Register New Account →</Text>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>

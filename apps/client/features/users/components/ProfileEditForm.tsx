@@ -34,16 +34,16 @@ export default function ProfileEditForm({
 }: Props) {
   return (
     <View style={styles.form}>
-      <Text style={styles.label}>Name</Text>
+      <Text style={styles.label}>Name*</Text>
       <TextInput value={name} onChangeText={setName} style={styles.input} />
 
-      <Text style={styles.label}>Education Level</Text>
+      <Text style={styles.label}>Education Level*</Text>
       <Pressable style={styles.dropdown} onPress={onOpenEducation}>
         <Text style={styles.dropdownText}>{educationLevel}</Text>
         <Feather name="chevron-down" size={18} color={COLORS.textSecondary} />
       </Pressable>
 
-      <Text style={styles.label}>Major</Text>
+      <Text style={styles.label}>Major*</Text>
       <TextInput value={major} onChangeText={setMajor} style={styles.input} />
 
       <Text style={styles.label}>About</Text>
@@ -54,7 +54,7 @@ export default function ProfileEditForm({
         multiline
       />
 
-      <Text style={styles.label}>Strengths</Text>
+      <Text style={styles.label}>Strengths*</Text>
       <View style={styles.tagRow}>
         {strengths.map((t) => (
           <View key={t} style={styles.tag}>
@@ -66,7 +66,7 @@ export default function ProfileEditForm({
         </Pressable>
       </View>
 
-      <Text style={styles.label}>Needs Help With</Text>
+      <Text style={styles.label}>Needs Help With*</Text>
       <View style={styles.tagRow}>
         {needs.map((t) => (
           <View key={t} style={styles.tag}>
