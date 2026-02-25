@@ -56,6 +56,11 @@ export default function TabsLayout() {
         href: null,
       }}
       />
+
+      <Tabs.Screen name="schedule-session" options={{
+        href: null,
+      }}
+      />
     </Tabs>
   );
 }

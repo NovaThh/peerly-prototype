@@ -28,7 +28,7 @@ export const MOCK_USERS: User[] = [
     description: 'I can help with Java and CI/CD. Looking to improve Python. I can help with Java and CI/CD. Looking to improve Python. I can help with Java and CI/CD. Looking to improve Pythodadsadasdn.',
     token_balance: 3,
     created_at: '2026-02-01T10:00:00Z',
-    profile_image_url: 'https://res.cloudinary.com/jerrick/image/upload/v1530566517/finbpjpirbespgfpul19.jpg',
+    profile_image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_92NgguhgHdgzjrF0eGIomy1BP1UIGTKS6Q&s',
   },
   {
     id: '2',
@@ -42,7 +42,7 @@ export const MOCK_USERS: User[] = [
     description: 'Embedded + Java. Learning languages.',
     token_balance: 2,
     created_at: '2026-02-03T12:30:00Z',
-    profile_image_url: 'https://res.cloudinary.com/jerrick/image/upload/v1530566517/finbpjpirbespgfpul19.jpg',
+    profile_image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_92NgguhgHdgzjrF0eGIomy1BP1UIGTKS6Q&s',
   },
   {
     id: '3',
@@ -56,7 +56,7 @@ export const MOCK_USERS: User[] = [
     description: 'Happy to help with C#.',
     token_balance: 1,
     created_at: '2026-02-05T09:15:00Z',
-    profile_image_url: 'https://res.cloudinary.com/jerrick/image/upload/v1530566517/finbpjpirbespgfpul19.jpg',
+    profile_image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_92NgguhgHdgzjrF0eGIomy1BP1UIGTKS6Q&s',
   },
   {
     id: '4',
@@ -70,7 +70,7 @@ export const MOCK_USERS: User[] = [
     description: 'Languages + humanities.',
     token_balance: 4,
     created_at: '2026-02-06T18:00:00Z',
-    profile_image_url: 'https://res.cloudinary.com/jerrick/image/upload/v1530566517/finbpjpirbespgfpul19.jpg',
+    profile_image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_92NgguhgHdgzjrF0eGIomy1BP1UIGTKS6Q&s',
   },
   {
     id: '5',
@@ -84,6 +84,6 @@ export const MOCK_USERS: User[] = [
     description: 'Finance/accounting.',
     token_balance: 3,
     created_at: '2026-02-07T14:00:00Z',
-    profile_image_url: 'https://res.cloudinary.com/jerrick/image/upload/v1530566517/finbpjpirbespgfpul19.jpg',
+    profile_image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_92NgguhgHdgzjrF0eGIomy1BP1UIGTKS6Q&s',
   },
 ];
