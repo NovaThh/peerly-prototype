@@ -1,64 +1,47 @@
-package com.peerly.server.user.entity;
-
-import java.time.Instant;
-import java.util.UUID;
+package com.peerly.server.user.dto;
 
 import com.peerly.server.user.EducationLevel;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
-@Entity
-@Table(name = "users")
-public class User {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID id;
-
+//Incoming
+public class UserRequestDto {
   @NotBlank
-  @Column(nullable = false)
+  @Size(min = 2, max = 50, message = "Name must have at least 2 characters")
+  @Pattern(regexp = "^(?=.*[AEIOUaeiou])[A-Za-z]+( [A-Za-z]+)*$", message = "Name must contain only letters, single spaces between words, and at least one vowel")
   private String name;
 
   @Email
   @NotBlank
-  @Column(nullable = false, unique = true)
   private String email;
 
   @NotBlank
-  @Column(nullable = false)
-  private String passwordHash;
+  private String password;
 
   @NotBlank
-  @Column(nullable = false)
+  @Size(min = 2, max = 50)
+  @Pattern(regexp = "^[A-Za-z ]+$", message = "Major can only contain letters and spaces")
   private String major;
 
   @NotNull
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
   private EducationLevel educationLevel;
 
-  @NotBlank
-  @Column(nullable = false, columnDefinition = "TEXT")
+  @Size(min = 2, max = 35)
+  // even tho we store as varchar seperated by comma, front end only let user
+  // sends one strength/needs help with at a time, hence this restriction
+  @Pattern(regexp = "^[A-Za-z0-9 #+/]+$", message = "Only letters, numbers, spaces and # + / allowed")
   private String strengths;
 
   @NotBlank
-  @Column(nullable = false, columnDefinition = "TEXT")
+  @Size(min = 2, max = 35)
+  @Pattern(regexp = "^[A-Za-z0-9 #+/]+$", message = "Only letters, numbers, spaces and # + / allowed")
   private String needsHelpWith;
 
-  @Column(columnDefinition = "TEXT")
   private String description;
-
-  private Integer tokenBalance = 2;
-
-  private Instant createdAt = Instant.now();
 
   private String profileImageUrl;
 
-  public UUID getId() {
-    return id;
-  }
-
+  // getters
   public String getName() {
     return name;
   }
@@ -67,8 +50,8 @@ public class User {
     return email;
   }
 
-  public String getPasswordHash() {
-    return passwordHash;
+  public String getPassword() {
+    return password;
   }
 
   public String getMajor() {
@@ -91,18 +74,11 @@ public class User {
     return description;
   }
 
-  public Integer getTokenBalance() {
-    return tokenBalance;
-  }
-
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
   public String getProfileImageUrl() {
     return profileImageUrl;
   }
 
+  // setters (needed for JSON -> object binding)
   public void setName(String name) {
     this.name = name;
   }
@@ -111,8 +87,8 @@ public class User {
     this.email = email;
   }
 
-  public void setPasswordHash(String passwordHash) {
-    this.passwordHash = passwordHash;
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public void setMajor(String major) {

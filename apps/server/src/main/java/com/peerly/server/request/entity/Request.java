@@ -2,6 +2,7 @@ package com.peerly.server.request.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -20,17 +21,20 @@ public class Request {
   private UUID id;
 
   @ManyToOne
+  @NotNull
   @JoinColumn(name = "requester_id", nullable = false)
   private User requester;
 
   @ManyToOne
-  @NotBlank
+  @NotNull
   @JoinColumn(name = "receiver_id", nullable = false)
   private User receiver;
 
+  @NotBlank
   private String subject;
 
   @Enumerated(EnumType.STRING)
+  @NotNull
   private RequestType type;
 
   private LocalDateTime scheduledDatetime;
