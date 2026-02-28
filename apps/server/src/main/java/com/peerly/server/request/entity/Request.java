@@ -8,6 +8,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.springframework.boot.webmvc.autoconfigure.WebMvcProperties.Apiversion.Use;
+
 import com.peerly.server.request.RequestStatus;
 import com.peerly.server.request.RequestType;
 import com.peerly.server.user.entity.User;
@@ -44,5 +46,60 @@ public class Request {
 
   private Instant createdAt = Instant.now();
 
-  // getters and setters
+  public UUID getId() {
+    return id;
+  }
+
+  public User getRequester() {
+    return requester;
+  }
+
+  public User getReceiver() {
+    return receiver;
+  }
+
+  public String getSubject() {
+    return subject;
+  }
+
+  public RequestType getType() {
+    return type;
+  }
+
+  public LocalDateTime getScheduledDatetime() {
+    return scheduledDatetime;
+  }
+
+  public RequestStatus getStatus() {
+    return status;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  // setters
+  public void setReceiver(User receiver) {
+    this.receiver = receiver;
+  }
+
+  public void setRequester(User requester) {
+    this.requester = requester;
+  }
+
+  public void setSubject(String subject) {
+    this.subject = subject;
+  }
+
+  public void setType(RequestType type) {
+    this.type = type;
+  }
+
+  public void setScheduledDatetime(LocalDateTime scheduledDatetime) {
+    this.scheduledDatetime = scheduledDatetime;
+  }
+
+  public void setStatus(RequestStatus status) {
+    this.status = status;
+  }
 }
