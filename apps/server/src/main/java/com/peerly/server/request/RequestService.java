@@ -9,19 +9,25 @@ import org.springframework.stereotype.Service;
 import com.peerly.server.request.dto.CreateRequestDto;
 import com.peerly.server.request.dto.RequestResponseDto;
 import com.peerly.server.request.entity.Request;
+import com.peerly.server.session.StudySessionService;
 import com.peerly.server.user.UserRepository;
 import com.peerly.server.user.entity.User;
+
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RequestService {
 
   private final RequestRepository requestRepository;
   private final UserRepository userRepository;
+  private final StudySessionService studySessionService;
 
   public RequestService(RequestRepository requestRepository,
-      UserRepository userRepository) {
+      UserRepository userRepository,
+      StudySessionService studySessionService) {
     this.requestRepository = requestRepository;
     this.userRepository = userRepository;
+    this.studySessionService = studySessionService;
   }
 
   public RequestResponseDto createRequest(CreateRequestDto dto) {
@@ -89,17 +95,28 @@ public class RequestService {
         .collect(Collectors.toList());
   }
 
+  @Transactional
   public RequestResponseDto updateRequestStatus(UUID requestId, RequestStatus newStatus) {
 
     Request request = requestRepository.findById(requestId)
         .orElseThrow(() -> new RuntimeException("Request not found"));
 
-    // Simple prototype rule: allow any status change
-    // (Later we’ll enforce valid transitions: PENDING->ACCEPTED/DECLINED, etc.) if
-    // this prototype is chosen
+    RequestStatus oldStatus = request.getStatus();
     request.setStatus(newStatus);
 
     Request saved = requestRepository.save(request);
+
+    // AUTOMATION RULES:
+    // PENDING -> ACCEPTED => create study session
+    if (oldStatus == RequestStatus.PENDING && newStatus == RequestStatus.ACCEPTED) {
+      studySessionService.createSessionForRequest(requestId);
+    }
+
+    // ACCEPTED -> CANCELED => delete session
+    if (newStatus == RequestStatus.CANCELED || newStatus == RequestStatus.DECLINED) {
+      studySessionService.deleteSessionByRequestId(requestId);
+    }
+
     return mapToDto(saved);
   }
 

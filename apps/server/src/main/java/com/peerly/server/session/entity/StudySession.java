@@ -31,5 +31,53 @@ public class StudySession {
 
   private Instant createdAt = Instant.now();
 
-  // getters and setters
+  // getters
+  public UUID getId() {
+    return id;
+  }
+
+  public Request getRequest() {
+    return request;
+  }
+
+  public LocalDateTime getScheduledDatetime() {
+    return scheduledDatetime;
+  }
+
+  public Instant getCompletedAt() {
+    return completedAt;
+  }
+
+  public boolean isRequesterCompleted() {
+    return requesterCompleted;
+  }
+
+  public boolean isReceiverCompleted() {
+    return receiverCompleted;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  // setters
+  public void setRequest(Request request) {
+    this.request = request;
+  }
+
+  public void setScheduledDatetime(LocalDateTime scheduledDatetime) {
+    this.scheduledDatetime = scheduledDatetime;
+  }
+
+  public void setCompletedAt(Instant completedAt) {
+    this.completedAt = completedAt;
+  }
+
+  public void setRequesterCompleted(boolean requesterCompleted) {
+    this.requesterCompleted = requesterCompleted;
+  }
+
+  public void setReceiverCompleted(boolean receiverCompleted) {
+    this.receiverCompleted = receiverCompleted;
+  }
 }

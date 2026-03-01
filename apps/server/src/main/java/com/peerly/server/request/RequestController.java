@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import com.peerly.server.request.dto.CreateRequestDto;
 import com.peerly.server.request.dto.RequestResponseDto;
 import com.peerly.server.request.dto.UpdateRequestStatusDto;
+import com.peerly.server.session.StudySessionService;
+import com.peerly.server.session.dto.StudySessionResponseDto;
+import com.peerly.server.session.dto.UpdateStudySessionScheduleDto;
 
 import jakarta.validation.Valid;
 
@@ -17,9 +20,11 @@ import jakarta.validation.Valid;
 public class RequestController {
 
   private final RequestService requestService;
+  private final StudySessionService studySessionService;
 
-  public RequestController(RequestService requestService) {
+  public RequestController(RequestService requestService, StudySessionService studySessionService) {
     this.requestService = requestService;
+    this.studySessionService = studySessionService;
   }
 
   // POST /requests
@@ -58,13 +63,32 @@ public class RequestController {
     return requestService.getRequestById(id);
   }
 
-  @PatchMapping("{id}/status")
+  // PATCH /requests/{id}/status
+  @PatchMapping("/{id}/status")
   public RequestResponseDto updateStatus(@PathVariable UUID id, @Valid @RequestBody UpdateRequestStatusDto dto) {
     return requestService.updateRequestStatus(id, dto.getStatus());
   }
 
+  // DELETE /requests/{id}
   @DeleteMapping("/{id}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteRequest(@PathVariable UUID id) {
     requestService.deleteRequest(id);
+  }
+
+  // StudySession sub-resource
+  // GET /requests/{requestId}/session
+  @GetMapping("/{requestId}/session")
+  public StudySessionResponseDto getSessionForRequest(@PathVariable UUID requestId) {
+    return studySessionService.getSessionByRequestId(requestId);
+  }
+
+  // PATCH /requests/{requestId}/session/schedule
+  @PatchMapping("/{requestId}/session/schedule")
+  public StudySessionResponseDto updateSessionSchedule(
+      @PathVariable UUID requestId,
+      @Valid @RequestBody UpdateStudySessionScheduleDto dto) {
+
+    return studySessionService.updateSchedule(requestId, dto);
   }
 }
