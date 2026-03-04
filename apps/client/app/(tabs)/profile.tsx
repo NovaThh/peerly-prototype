@@ -1,6 +1,10 @@
 import UserProfileScreen from '@/features/users/screens/UserProfileScreen';
+import { getLoggedInUserId } from '@/shared/store/auth';
 
 export default function ProfileScreen() {
-  //TODO: actually fetch the userId here
-  return <UserProfileScreen userId="1" mode="self" />;
+  const userId = getLoggedInUserId();
+  if (!userId) return null;
+
+  return <UserProfileScreen userId={userId} mode="self" />;
+
 }

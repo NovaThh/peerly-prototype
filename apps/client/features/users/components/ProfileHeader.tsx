@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Image } from 'react-native';
-import type { User } from '@/features/home/data/mockUsers';
+import type { User } from '@/features/users/data/types';
 import BackButton from '@/shared/components/ui/BackButton';
 import { router } from 'expo-router';
 
@@ -8,7 +8,7 @@ type BackToType = Parameters<typeof router.replace>[0];
 type Props = {
   user: User;
   showBack?: boolean;
-  backTo?: BackToType;   // ← properly typed
+  backTo?: BackToType;
 };
 
 export default function ProfileHeader({

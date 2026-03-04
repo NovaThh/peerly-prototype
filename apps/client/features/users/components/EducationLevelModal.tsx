@@ -1,6 +1,6 @@
 import { Modal, Pressable, View, Text, StyleSheet } from 'react-native';
 import { COLORS } from '@/constants/theme';
-import type { EducationLevel } from '@/features/home/data/mockUsers';
+import { type EducationLevel } from '@/features/users/data/types';
 
 type Props = {
   visible: boolean;

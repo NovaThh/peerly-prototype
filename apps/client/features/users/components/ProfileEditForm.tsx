@@ -1,7 +1,7 @@
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { COLORS } from '@/constants/theme';
-import type { EducationLevel } from '@/features/home/data/mockUsers';
+import { type EducationLevel } from '@/features/users/data/types';
 
 type Props = {
   name: string;
@@ -12,10 +12,15 @@ type Props = {
   setAbout: (v: string) => void;
   educationLevel: EducationLevel;
   onOpenEducation: () => void;
+
   strengths: string[];
   needs: string[];
+
   onAddStrength: () => void;
   onAddNeed: () => void;
+
+  onRemoveStrength: (value: string) => void;
+  onRemoveNeed: (value: string) => void;
 };
 
 export default function ProfileEditForm({
@@ -31,6 +36,8 @@ export default function ProfileEditForm({
   needs,
   onAddStrength,
   onAddNeed,
+  onRemoveStrength,
+  onRemoveNeed,
 }: Props) {
   return (
     <View style={styles.form}>
@@ -59,8 +66,16 @@ export default function ProfileEditForm({
         {strengths.map((t) => (
           <View key={t} style={styles.tag}>
             <Text style={styles.tagText}>{t}</Text>
+            <Pressable
+              hitSlop={8}
+              onPress={() => onRemoveStrength(t)}
+              style={styles.tagX}
+            >
+              <Feather name="x" size={14} color={COLORS.textSecondary} />
+            </Pressable>
           </View>
         ))}
+
         <Pressable style={styles.plus} onPress={onAddStrength}>
           <Feather name="plus" size={16} color={COLORS.textPrimary} />
         </Pressable>
@@ -71,8 +86,16 @@ export default function ProfileEditForm({
         {needs.map((t) => (
           <View key={t} style={styles.tag}>
             <Text style={styles.tagText}>{t}</Text>
+            <Pressable
+              hitSlop={8}
+              onPress={() => onRemoveNeed(t)}
+              style={styles.tagX}
+            >
+              <Feather name="x" size={14} color={COLORS.textSecondary} />
+            </Pressable>
           </View>
         ))}
+
         <Pressable style={styles.plus} onPress={onAddNeed}>
           <Feather name="plus" size={16} color={COLORS.textPrimary} />
         </Pressable>
@@ -102,17 +125,30 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.card,
   },
   dropdownText: { color: COLORS.textPrimary },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 6 },
+
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 6, alignItems: 'center' },
+
   tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.textMuted,
     borderRadius: 8,
     paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingLeft: 10,
+    paddingRight: 6,
     marginRight: 8,
     marginBottom: 8,
   },
-  tagText: { fontSize: 12 },
+  tagText: { fontSize: 12, marginRight: 6 },
+  tagX: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   plus: {
     width: 28,
     height: 28,

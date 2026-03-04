@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/theme';
 import PeerlyButton from '@/shared/components/ui/PeerlyButton';
-import { MOCK_USERS } from '@/features/home/data/mockUsers';
+import { useUsers } from '@/features/users/store/usersStore';
 import { router } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import { login } from '@/shared/store/auth';
 
 export default function LoginScreen() {
+  const users = useUsers();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,7 +21,7 @@ export default function LoginScreen() {
       return;
     }
 
-    const user = MOCK_USERS.find(
+    const user = users.find(
       (u) => u.email === email && u.password === password
     );
 
@@ -29,15 +31,13 @@ export default function LoginScreen() {
     }
 
     setError('');
-    //TODO: later replace with auth state logic
-    login();
+    login(user.id);
     router.replace('/home');
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.container}>
-        {/* Back */}
         <Pressable onPress={() => router.replace('/home')} style={styles.back}>
           <Feather name="arrow-left" size={22} color={COLORS.textPrimary} />
         </Pressable>
@@ -72,6 +72,7 @@ export default function LoginScreen() {
           />
 
           <Text style={styles.link}>Forgot password?</Text>
+
           <Pressable onPress={() => router.push('/register/credentials')}>
             <Text style={styles.link}>Register New Account →</Text>
           </Pressable>

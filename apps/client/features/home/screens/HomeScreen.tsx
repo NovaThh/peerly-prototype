@@ -6,16 +6,17 @@ import SearchBar from '../components/SearchBar';
 import FilterToggle, { FilterType } from '../components/FilterToggle';
 import UserCard from '../components/UserCard';
 import { COLORS } from '@/constants/theme';
-import { MOCK_USERS } from '../data/mockUsers';
+import { useUsers } from '@/features/users/store/usersStore';
 
 export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterType>(null);
+  const users = useUsers();
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return MOCK_USERS.filter((user) => {
+    return users.filter((user) => {
       if (!query) return true;
 
       const goodAtMatch = user.strengths.some((s) =>

@@ -1,22 +1,22 @@
 import { useState } from 'react';
 import { View, StyleSheet, ScrollView, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useRouter, useRootNavigationState } from 'expo-router';
 
 import { COLORS } from '@/constants/theme';
-import {
-  MOCK_USERS,
-  type EducationLevel,
-  type User,
-} from '@/features/home/data/mockUsers';
+import { type EducationLevel, type User } from '@/features/users/data/types';
+import { addUser } from '@/features/users/store/usersStore';
+
 import ProfileEditForm from '@/features/users/components/ProfileEditForm';
 import PeerlyButton from '@/shared/components/ui/PeerlyButton';
 import EducationLevelModal from '@/features/users/components/EducationLevelModal';
 import AddTagModal from '@/features/users/components/AddTagModal';
+
 import {
   getRegisterCredentials,
   getRegisterProfileImage,
 } from '@/features/auth/store/registerStore';
+
 import { login } from '@/shared/store/auth';
 
 const EDUCATION_LEVELS: EducationLevel[] = [
@@ -28,6 +28,15 @@ const EDUCATION_LEVELS: EducationLevel[] = [
 ];
 
 export default function RegisterProfileScreen() {
+  const router = useRouter();
+  const navState = useRootNavigationState();
+
+  const safeReplace = (href: string) => {
+    // navState?.key exists only after root navigator is mounted
+    if (!navState?.key) return;
+    router.replace(href as any);
+  };
+
   const creds = getRegisterCredentials();
 
   const [name, setName] = useState('');
@@ -35,6 +44,7 @@ export default function RegisterProfileScreen() {
   const [about, setAbout] = useState('');
   const [educationLevel, setEducationLevel] =
     useState<EducationLevel>('HBO');
+
   const [strengths, setStrengths] = useState<string[]>([]);
   const [needs, setNeeds] = useState<string[]>([]);
 
@@ -43,9 +53,8 @@ export default function RegisterProfileScreen() {
   const [tagTitle, setTagTitle] = useState('Enter a strength');
   const [tagValue, setTagValue] = useState('');
   const [tagError, setTagError] = useState('');
-  const [tagTarget, setTagTarget] = useState<'strengths' | 'needs'>(
-    'strengths',
-  );
+  const [tagTarget, setTagTarget] =
+    useState<'strengths' | 'needs'>('strengths');
 
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +63,7 @@ export default function RegisterProfileScreen() {
     setTagTitle(
       target === 'strengths'
         ? 'Enter a strength'
-        : 'Enter a weakness',
+        : 'Enter a weakness'
     );
     setTagValue('');
     setTagError('');
@@ -63,10 +72,12 @@ export default function RegisterProfileScreen() {
 
   const addTag = () => {
     const trimmed = tagValue.trim();
+
     if (!trimmed) {
       setTagError('Value is required.');
       return;
     }
+
     if (!/^[a-zA-Z0-9 ]+$/.test(trimmed)) {
       setTagError('Only letters and spaces allowed.');
       return;
@@ -77,10 +88,11 @@ export default function RegisterProfileScreen() {
     } else {
       setNeeds((prev) => [...prev, trimmed]);
     }
+
     setTagOpen(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!creds) {
       setError('Something went wrong. Please start registration again.');
       return;
@@ -96,20 +108,19 @@ export default function RegisterProfileScreen() {
 
     if (!/[aeiouAEIOU]/.test(trimmedName) || trimmedName.length < 2) {
       setError(
-        'Name must be at least 2 characters and contain a vowel.',
+        'Name must be at least 2 characters and contain a vowel.'
       );
       return;
     }
 
     setError(null);
 
-    const newId = (MOCK_USERS.length + 1).toString();
     const profileImageUrl =
       getRegisterProfileImage() ??
-      'https://placekitten.com/400/400'; // placeholder
+      'https://placekitten.com/400/400';
 
     const newUser: User = {
-      id: newId,
+      id: Date.now().toString(),
       name: trimmedName,
       email: creds.email,
       password: creds.password,
@@ -123,19 +134,16 @@ export default function RegisterProfileScreen() {
       profile_image_url: profileImageUrl,
     };
 
-    // prototype-level mutation
-    MOCK_USERS.push(newUser);
+    await addUser(newUser);
 
-    login();
-    router.replace('/home');
+    login(newUser.id);
+    safeReplace('/home');
   };
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 120 }}
-        >
+        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
           <ProfileEditForm
             name={name}
             setName={(v) => {
@@ -155,6 +163,12 @@ export default function RegisterProfileScreen() {
             needs={needs}
             onAddStrength={() => openTag('strengths')}
             onAddNeed={() => openTag('needs')}
+            onRemoveStrength={(value) =>
+              setStrengths((prev) => prev.filter((x) => x !== value))
+            }
+            onRemoveNeed={(value) =>
+              setNeeds((prev) => prev.filter((x) => x !== value))
+            }
           />
 
           {error && (

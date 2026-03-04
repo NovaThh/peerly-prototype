@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { COLORS } from '@/constants/theme';
-import type { Request, RequestStatus } from '../data/mockRequests';
-import { MOCK_USERS } from '@/features/home/data/mockUsers';
+import type { Request, RequestStatus } from '../data/types';
+import { findUser } from '@/features/users/store/usersStore'
 import RequestActionsMenu, {
   RequestAction,
 } from './RequestActionsMenu';
@@ -26,13 +26,13 @@ export default function RequestCard({
 }: Props) {
   const isRequester = request.requester_id === currentUserId;
   const otherUserId = isRequester ? request.receiver_id : request.requester_id;
-  const otherUser = MOCK_USERS.find((u) => u.id === otherUserId);
+  const otherUser = findUser(otherUserId);
   if (!otherUser) return null;
 
   const { status, subject, type } = request;
   const isOffer = type === 'OFFER';
 
-  // -------- subtitle text --------
+  // subtitle text
   let subtitleText = '';
 
   if (status === 'ACCEPTED') {
@@ -84,7 +84,7 @@ export default function RequestCard({
     }
   }
 
-  // -------- actions for dropdown --------
+  // actions for dropdown
   const actions: RequestAction[] = [];
 
   const handleChat = () => {

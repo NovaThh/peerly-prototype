@@ -1,35 +1,13 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
-} from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 
 import { COLORS } from '@/constants/theme';
 import PeerlyButton from '@/shared/components/ui/PeerlyButton';
-import {
-  setRegisterCredentials,
-} from '@/features/auth/store/registerStore';
-
-function validateName(name: string): string | null {
-  const trimmed = name.trim();
-  if (!trimmed) return 'Name is required.';
-  if (!/^[A-Za-z ]+$/.test(trimmed)) {
-    return 'Name can only contain letters and spaces.';
-  }
-  if (trimmed.length < 2) {
-    return 'Name must be at least 2 characters.';
-  }
-  if (!/[aeiouAEIOU]/.test(trimmed)) {
-    return 'Name must contain at least one vowel.';
-  }
-  return null;
-}
+import { setRegisterCredentials } from '@/features/auth/store/registerStore';
+import { useUsers } from '@/features/users/store/usersStore';
 
 function validateEmail(email: string): string | null {
   const trimmed = email.trim();
@@ -40,12 +18,12 @@ function validateEmail(email: string): string | null {
 }
 
 export default function RegisterCredentialsScreen() {
-  const [name, setName] = useState('');
+  const users = useUsers();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
 
-  const [nameError, setNameError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
@@ -53,13 +31,18 @@ export default function RegisterCredentialsScreen() {
   const handleNext = () => {
     let hasError = false;
 
-    const nErr = validateName(name);
-    setNameError(nErr);
-    if (nErr) hasError = true;
-
     const eErr = validateEmail(email);
     setEmailError(eErr);
     if (eErr) hasError = true;
+
+    // email already in use (case-insensitive)
+    const emailTaken = users.some(
+      (u) => u.email.trim().toLowerCase() === email.trim().toLowerCase()
+    );
+    if (!eErr && emailTaken) {
+      setEmailError('Email is already in use.');
+      hasError = true;
+    }
 
     if (!password.trim()) {
       setPasswordError('Password is required.');
@@ -83,40 +66,20 @@ export default function RegisterCredentialsScreen() {
 
     if (hasError) return;
 
-    setRegisterCredentials({ name, email, password });
+    setRegisterCredentials({ email: email.trim(), password });
     router.push('/register/photo');
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.container}>
-        {/* Back */}
-        <Pressable
-          onPress={() => router.replace('/login')}
-          style={styles.back}
-        >
-          <Feather
-            name="arrow-left"
-            size={22}
-            color={COLORS.textPrimary}
-          />
+        <Pressable onPress={() => router.replace('/login')} style={styles.back}>
+          <Feather name="arrow-left" size={22} color={COLORS.textPrimary} />
         </Pressable>
 
         <Text style={styles.title}>Register</Text>
 
         <View style={styles.card}>
-          <Text style={styles.label}>Username</Text>
-          <TextInput
-            value={name}
-            onChangeText={(v) => {
-              setName(v);
-              setNameError(null);
-            }}
-            placeholder="Value"
-            style={styles.input}
-          />
-          {nameError && <Text style={styles.error}>{nameError}</Text>}
-
           <Text style={styles.label}>Email</Text>
           <TextInput
             value={email}
@@ -124,7 +87,7 @@ export default function RegisterCredentialsScreen() {
               setEmail(v);
               setEmailError(null);
             }}
-            placeholder="Value"
+            placeholder="Enter email"
             autoCapitalize="none"
             keyboardType="email-address"
             style={styles.input}
@@ -138,13 +101,11 @@ export default function RegisterCredentialsScreen() {
               setPassword(v);
               setPasswordError(null);
             }}
-            placeholder="Value"
+            placeholder="Enter password"
             secureTextEntry
             style={styles.input}
           />
-          {passwordError && (
-            <Text style={styles.error}>{passwordError}</Text>
-          )}
+          {passwordError && <Text style={styles.error}>{passwordError}</Text>}
 
           <Text style={styles.label}>Confirm Password</Text>
           <TextInput
@@ -153,13 +114,11 @@ export default function RegisterCredentialsScreen() {
               setConfirm(v);
               setConfirmError(null);
             }}
-            placeholder="Value"
+            placeholder="Confirm password"
             secureTextEntry
             style={styles.input}
           />
-          {confirmError && (
-            <Text style={styles.error}>{confirmError}</Text>
-          )}
+          {confirmError && <Text style={styles.error}>{confirmError}</Text>}
 
           <PeerlyButton
             title="Next"
@@ -179,17 +138,9 @@ export default function RegisterCredentialsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  back: {
-    marginBottom: 10,
-  },
+  safe: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, padding: 20 },
+  back: { marginBottom: 10 },
   title: {
     fontSize: 22,
     fontWeight: '700',

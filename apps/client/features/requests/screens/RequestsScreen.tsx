@@ -1,25 +1,19 @@
-// features/requests/screens/RequestsScreen.tsx
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/theme';
 import RequestCard from '../components/RequestCard';
 import RequestSection from '../components/RequestSection';
-import { isLoggedIn } from '@/shared/store/auth';
 import PeerlyButton from '@/shared/components/ui/PeerlyButton';
 import { router } from 'expo-router';
-import {
-  useRequests,
-  setRequestStatus,
-  deleteRequest,
-} from '../store/requestsStore';
-import type { Request } from '../data/mockRequests';
+import { useRequests, setRequestStatus, deleteRequest } from '../store/requestsStore';
+import type { Request } from '../data/types';
+import { isLoggedIn, getLoggedInUserId } from '@/shared/store/auth';
 
 export default function RequestsScreen() {
-  const currentUserId = '1';
+  const requests = useRequests();
 
-  const requests = useRequests(); // shared in-memory state
-
-  if (!isLoggedIn) {
+  // show login prompt first
+  if (!isLoggedIn()) {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.centered}>
@@ -40,39 +34,18 @@ export default function RequestsScreen() {
     );
   }
 
+  const currentUserId = getLoggedInUserId();
+  if (!currentUserId) return null;
+
   const isInvolved = (r: Request) =>
-    r.requester_id === currentUserId ||
-    r.receiver_id === currentUserId;
+    r.requester_id === currentUserId || r.receiver_id === currentUserId;
 
-  // Active Sessions (ACCEPTED)
-  const activeSessions = requests.filter(
-    (r) => r.status === 'ACCEPTED' && isInvolved(r),
-  );
-
-  // Incoming (Pending & I am receiver)
-  const incoming = requests.filter(
-    (r) =>
-      r.status === 'PENDING' &&
-      r.receiver_id === currentUserId,
-  );
-
-  // Outgoing (Pending & I am requester)
-  const outgoing = requests.filter(
-    (r) =>
-      r.status === 'PENDING' &&
-      r.requester_id === currentUserId,
-  );
-
-  // Completed
-  const completed = requests.filter(
-    (r) => r.status === 'COMPLETED' && isInvolved(r),
-  );
-
-  // Canceled / Declined
+  const activeSessions = requests.filter((r) => r.status === 'ACCEPTED' && isInvolved(r));
+  const incoming = requests.filter((r) => r.status === 'PENDING' && r.receiver_id === currentUserId);
+  const outgoing = requests.filter((r) => r.status === 'PENDING' && r.requester_id === currentUserId);
+  const completed = requests.filter((r) => r.status === 'COMPLETED' && isInvolved(r));
   const canceledOrDeclined = requests.filter(
-    (r) =>
-      ['DECLINED', 'CANCELED'].includes(r.status) &&
-      isInvolved(r),
+    (r) => ['DECLINED', 'CANCELED'].includes(r.status) && isInvolved(r)
   );
 
   return (
@@ -80,7 +53,6 @@ export default function RequestsScreen() {
       <Text style={styles.pageTitle}>All Requests and Offers</Text>
 
       <ScrollView contentContainerStyle={styles.container}>
-
         <RequestSection title="Active Sessions" count={activeSessions.length}>
           {activeSessions.map((r) => (
             <RequestCard
@@ -133,10 +105,7 @@ export default function RequestsScreen() {
           ))}
         </RequestSection>
 
-        <RequestSection
-          title="Canceled / Declined"
-          count={canceledOrDeclined.length}
-        >
+        <RequestSection title="Canceled / Declined" count={canceledOrDeclined.length}>
           {canceledOrDeclined.map((r) => (
             <RequestCard
               key={r.id}
@@ -148,7 +117,6 @@ export default function RequestsScreen() {
             />
           ))}
         </RequestSection>
-
       </ScrollView>
     </SafeAreaView>
   );

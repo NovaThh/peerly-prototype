@@ -1,18 +1,16 @@
 import { useSyncExternalStore } from 'react';
-import {
-  MOCK_REQUESTS,
-  type Request,
-  type RequestStatus,
-} from '../data/mockRequests';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Request, RequestStatus } from '../data/types';
 
-// internal state
-let requests: Request[] = [...MOCK_REQUESTS];
+const STORAGE_KEY = 'peerly_requests';
+
+let requests: Request[] = [];
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
 
 function emit() {
-  listeners.forEach((listener) => listener());
+  listeners.forEach((l) => l());
 }
 
 function subscribe(listener: Listener) {
@@ -24,18 +22,48 @@ function getSnapshot() {
   return requests;
 }
 
-// public hook 
 export function useRequests(): Request[] {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
-// actions used by both list + profile
-export function setRequestStatus(id: string, status: RequestStatus) {
-  requests = requests.map((r) => (r.id === id ? { ...r, status } : r));
+//STORAGE
+export async function loadRequests() {
+  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+
+  if (raw) {
+    requests = JSON.parse(raw);
+  }
+
   emit();
 }
 
-export function deleteRequest(id: string) {
-  requests = requests.filter((r) => r.id !== id);
+async function persist() {
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
+}
+
+//ACTIONS
+export async function addRequest(request: Request) {
+  requests = [...requests, request];
+  await persist();
   emit();
+}
+
+export async function setRequestStatus(id: string, status: RequestStatus) {
+  requests = requests.map((r) =>
+    r.id === id ? { ...r, status } : r
+  );
+
+  await persist();
+  emit();
+}
+
+export async function deleteRequest(id: string) {
+  requests = requests.filter((r) => r.id !== id);
+
+  await persist();
+  emit();
+}
+
+export function findRequest(id: string) {
+  return requests.find((r) => r.id === id);
 }

@@ -1,8 +1,6 @@
-// features/users/screens/UserProfileScreen.tsx
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/theme';
-import { MOCK_USERS } from '@/features/home/data/mockUsers';
 import ProfileHeader from '../components/ProfileHeader';
 import ProfileSection from '../components/ProfileSection';
 import TagList from '../components/TagList';
@@ -12,11 +10,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Feather from '@expo/vector-icons/Feather';
 import { logout } from '@/shared/store/auth';
 import { router } from 'expo-router';
-import {
-  setRequestStatus,
-  deleteRequest,
-} from '@/features/requests/store/requestsStore';
-import type { RequestStatus } from '@/features/requests/data/mockRequests';
+import { setRequestStatus, deleteRequest } from '@/features/requests/store/requestsStore';
+import { useUsers } from '@/features/users/store/usersStore';
+import type { RequestStatus } from '@/features/requests/data/types';
 import StudySessionSchedulePlaceholder from '../components/StudySessionSchedulePlaceholder';
 
 type RequestContext =
@@ -40,7 +36,8 @@ export default function UserProfileScreen({
   requestContext,
   requestId,
 }: Props) {
-  const user = MOCK_USERS.find((u) => u.id === userId);
+  const users = useUsers();
+  const user = users.find((u) => u.id === userId);
   if (!user) return null;
 
   const isSelf = mode === 'self';

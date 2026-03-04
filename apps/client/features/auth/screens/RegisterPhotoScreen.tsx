@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
-
+import PeerlyButton from '@/shared/components/ui/PeerlyButton';
 import { COLORS } from '@/constants/theme';
 import PhotoActionSheet from '@/features/users/components/PhotoActionSheet';
 import {
@@ -84,14 +84,25 @@ export default function RegisterPhotoScreen() {
             </View>
           </Pressable>
 
-          <Pressable onPress={goNext}>
-            <Text style={styles.skip}>Skip →</Text>
-          </Pressable>
+          <View style={styles.buttons}>
+            <PeerlyButton
+              title="Next"
+              backgroundColor={COLORS.buttonGreen}
+              textColor={COLORS.textOnDark}
+              style={{ width: 200 }}
+              onPress={goNext}
+            />
+
+            <Pressable onPress={goNext}>
+              <Text style={styles.skip}>Skip →</Text>
+            </Pressable>
+          </View>
         </View>
 
         <PhotoActionSheet
           visible={sheetOpen}
           onClose={handleCloseSheet}
+          onPick={(uri) => setPhoto(uri)}
         />
       </View>
     </SafeAreaView>
@@ -161,5 +172,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: COLORS.textPrimary,
     textDecorationLine: 'underline',
+  },
+  buttons: {
+    alignItems: 'center',
+    marginTop: 20,
   },
 });

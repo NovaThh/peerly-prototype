@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { COLORS } from '@/constants/theme';
-import type { User } from '../data/mockUsers';
+import type { User } from '@/features/users/data/types';
 import { router } from 'expo-router';
 
 type Props = {
@@ -28,20 +28,12 @@ export default function UserCard({ user }: Props) {
             </Text>
           </Text>
 
-          <Text
-            style={styles.line}
-            numberOfLines={2}
-            ellipsizeMode="tail"
-          >
+          <Text style={styles.line} numberOfLines={2} ellipsizeMode="tail">
             <Text style={styles.label}>Good at: </Text>
             {user.strengths.join(', ')}
           </Text>
 
-          <Text
-            style={styles.line}
-            numberOfLines={2}
-            ellipsizeMode="tail"
-          >
+          <Text style={styles.line} numberOfLines={2} ellipsizeMode="tail">
             <Text style={styles.label}>Need help: </Text>
             {user.needs_help_with.join(', ')}
           </Text>

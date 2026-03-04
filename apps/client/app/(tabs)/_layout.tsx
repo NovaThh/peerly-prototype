@@ -45,8 +45,7 @@ export default function TabsLayout() {
         }}
         listeners={{
           tabPress: (e) => {
-            // prototype guard
-            if (!isLoggedIn) {
+            if (!isLoggedIn()) {
               e.preventDefault();
               router.push('/login');
             }

@@ -1,23 +1,55 @@
 import { Modal, Pressable, View, Text, StyleSheet } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS } from '@/constants/theme';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
+  onPick: (uri: string) => void;
 };
 
-export default function PhotoActionSheet({ visible, onClose }: Props) {
+export default function PhotoActionSheet({ visible, onClose, onPick }: Props) {
+
+  const pickFromGallery = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      onPick(result.assets[0].uri);
+    }
+
+    onClose();
+  };
+
+  const takePhoto = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      onPick(result.assets[0].uri);
+    }
+
+    onClose();
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet}>
-          <Pressable style={styles.row} onPress={onClose}>
+
+          <Pressable style={styles.row} onPress={pickFromGallery}>
             <Text>Upload from Gallery</Text>
           </Pressable>
+
           <View style={styles.divider} />
-          <Pressable style={styles.row} onPress={onClose}>
+
+          <Pressable style={styles.row} onPress={takePhoto}>
             <Text>Camera</Text>
           </Pressable>
+
         </Pressable>
       </Pressable>
     </Modal>
