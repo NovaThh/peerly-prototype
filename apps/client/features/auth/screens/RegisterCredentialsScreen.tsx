@@ -35,7 +35,6 @@ export default function RegisterCredentialsScreen() {
     setEmailError(eErr);
     if (eErr) hasError = true;
 
-    // email already in use (case-insensitive)
     const emailTaken = users.some(
       (u) => u.email.trim().toLowerCase() === email.trim().toLowerCase()
     );
@@ -70,10 +69,15 @@ export default function RegisterCredentialsScreen() {
     router.push('/register/photo');
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/login');
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.container}>
-        <Pressable onPress={() => router.replace('/login')} style={styles.back}>
+        <Pressable onPress={handleBack} style={styles.back}>
           <Feather name="arrow-left" size={22} color={COLORS.textPrimary} />
         </Pressable>
 
@@ -141,40 +145,10 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   container: { flex: 1, padding: 20 },
   back: { marginBottom: 10 },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 40,
-  },
-  card: {
-    backgroundColor: COLORS.card,
-    padding: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-  },
-  label: {
-    color: COLORS.textPrimary,
-    marginBottom: 6,
-    fontWeight: '500',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  error: {
-    color: COLORS.red,
-    marginBottom: 8,
-    fontSize: 13,
-  },
-  link: {
-    textAlign: 'center',
-    marginTop: 15,
-    color: COLORS.textPrimary,
-    textDecorationLine: 'underline',
-  },
+  title: { fontSize: 22, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 40 },
+  card: { backgroundColor: COLORS.card, padding: 20, borderRadius: 12, borderWidth: 1, borderColor: '#E5E5E5' },
+  label: { color: COLORS.textPrimary, marginBottom: 6, fontWeight: '500' },
+  input: { borderWidth: 1, borderColor: '#DDD', borderRadius: 8, padding: 12, marginBottom: 8 },
+  error: { color: COLORS.red, marginBottom: 8, fontSize: 13 },
+  link: { textAlign: 'center', marginTop: 15, color: COLORS.textPrimary, textDecorationLine: 'underline' },
 });

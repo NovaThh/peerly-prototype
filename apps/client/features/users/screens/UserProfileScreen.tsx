@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/theme';
 import ProfileHeader from '../components/ProfileHeader';
 import ProfileSection from '../components/ProfileSection';
@@ -36,6 +37,7 @@ export default function UserProfileScreen({
   requestContext,
   requestId,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const users = useUsers();
   const user = users.find((u) => u.id === userId);
   if (!user) return null;
@@ -48,65 +50,59 @@ export default function UserProfileScreen({
   const isCompletedView = !isSelf && requestContext === 'completed';
   const isHistoryView = !isSelf && requestContext === 'history';
 
-  const backTo: Parameters<typeof router.replace>[0] =
-    isSelf
-      ? '/home'
-      : requestContext
-        ? '/requests'
-        : '/home';
+  const bottomBarHeight = useMemo(() => {
+    // approximate heights for spacing the ScrollView content
+    if (isSelf) return 88; // self actions row
+    if (isActiveView) return 140; // actions row + complete button
+    if (isIncomingView) return 88;
+    if (isOutgoingView) return 88;
+    if (isCompletedView) return 110; // actions row + label
+    if (isHistoryView) return 88;
+    return 88; // default (chat/request/offer)
+  }, [isSelf, isActiveView, isIncomingView, isOutgoingView, isCompletedView, isHistoryView]);
 
-  const withRequest = (status: RequestStatus, cb?: () => void) => {
+  const withRequest = async (status: RequestStatus, cb?: () => void) => {
     if (!requestId) return;
-    setRequestStatus(requestId, status);
-    if (cb) cb();
+    await setRequestStatus(requestId, status);
+    cb?.();
   };
 
   const handleChat = () => {
     console.log('Chat from profile with', user.name, 'requestId:', requestId);
-    // TODO: navigate to chat screen
   };
 
-  const handleAccept = () => {
-    withRequest('ACCEPTED', () => router.replace('/requests'));
-  };
-
-  const handleDecline = () => {
-    withRequest('DECLINED', () => router.replace('/requests'));
-  };
-
-  const handleCancel = () => {
-    withRequest('CANCELED', () => router.replace('/requests'));
-  };
-
-  const handleDelete = () => {
+  const handleAccept = () => withRequest('ACCEPTED', () => router.back());
+  const handleDecline = () => withRequest('DECLINED', () => router.back());
+  const handleCancel = () => withRequest('CANCELED', () => router.back());
+  const handleDelete = async () => {
     if (!requestId) return;
-    deleteRequest(requestId);
-    router.replace('/requests');
+    await deleteRequest(requestId);
+    router.back();
   };
 
   const handleComplete = () => {
     console.log('Complete Clicked');
-    // if both users click complete, proceed to:
-    // withRequest('COMPLETED', () => router.replace('/requests'));
   };
 
   const handleSchedule = () => {
     if (!requestId) return;
     router.push({
-      pathname: '/schedule-session',
+      pathname: '/requests/schedule-session',
       params: { requestId },
     });
   };
+
+  const bottomPad = 12 + insets.bottom;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{
-            paddingBottom: isSelf ? 40 : 140,
+            paddingBottom: bottomBarHeight + bottomPad + 20,
           }}
         >
-          <ProfileHeader user={user} showBack={!isSelf} backTo={backTo} />
+          <ProfileHeader user={user} showBack={!isSelf} />
 
           <ProfileSection title="About">
             <AboutText text={user.description} />
@@ -120,7 +116,6 @@ export default function UserProfileScreen({
             <TagList items={user.needs_help_with} />
           </ProfileSection>
 
-          {/* Active + Completed sessions: Study Session Schedule placeholder */}
           {(isActiveView || isCompletedView) && (
             <ProfileSection title="Study Session Schedule">
               <StudySessionSchedulePlaceholder />
@@ -134,22 +129,17 @@ export default function UserProfileScreen({
           )}
         </ScrollView>
 
+        {/* SELF ACTIONS */}
         {isSelf && (
-          <View style={styles.selfActions}>
+          <View style={[styles.selfActions, { paddingBottom: bottomPad }]}>
             <PeerlyButton
               title="Edit"
               backgroundColor="transparent"
               textColor={COLORS.textPrimary}
               borderColor={COLORS.textMuted}
               style={styles.halfButton}
-              icon={
-                <Feather
-                  name="edit-2"
-                  size={16}
-                  color={COLORS.textPrimary}
-                />
-              }
-              onPress={() => router.push('/edit')}
+              icon={<Feather name="edit-2" size={16} color={COLORS.textPrimary} />}
+              onPress={() => router.push('/profile/edit')}
             />
 
             <PeerlyButton
@@ -167,25 +157,18 @@ export default function UserProfileScreen({
           </View>
         )}
 
-        {/* OTHER USER – INCOMING REQUEST VIEW: Chat / Accept / Decline */}
+        {/* INCOMING */}
         {!isSelf && isIncomingView && (
-          <View style={styles.bottomActions}>
+          <View style={[styles.bottomActions, { paddingBottom: bottomPad }]}>
             <View style={styles.actionsRow}>
               <PeerlyButton
                 title="Chat"
                 backgroundColor={COLORS.buttonBlack}
                 textColor={COLORS.textOnDark}
                 style={styles.actionButton}
-                icon={
-                  <MaterialIcons
-                    name="chat-bubble-outline"
-                    size={14}
-                    color={COLORS.textOnDark}
-                  />
-                }
+                icon={<MaterialIcons name="chat-bubble-outline" size={14} color={COLORS.textOnDark} />}
                 onPress={handleChat}
               />
-
               <PeerlyButton
                 title="Accept"
                 backgroundColor={COLORS.buttonGreen}
@@ -193,7 +176,6 @@ export default function UserProfileScreen({
                 style={styles.actionButton}
                 onPress={handleAccept}
               />
-
               <PeerlyButton
                 title="Decline"
                 backgroundColor={COLORS.red}
@@ -205,25 +187,18 @@ export default function UserProfileScreen({
           </View>
         )}
 
-        {/* OTHER USER – ACTIVE: Chat / Schedule / Cancel + Complete button */}
+        {/* ACTIVE */}
         {!isSelf && isActiveView && !isIncomingView && (
-          <View style={styles.bottomActions}>
+          <View style={[styles.bottomActions, { paddingBottom: bottomPad }]}>
             <View style={styles.actionsRow}>
               <PeerlyButton
                 title="Chat"
                 backgroundColor={COLORS.buttonBlack}
                 textColor={COLORS.textOnDark}
                 style={styles.actionButton}
-                icon={
-                  <MaterialIcons
-                    name="chat-bubble-outline"
-                    size={14}
-                    color={COLORS.textOnDark}
-                  />
-                }
+                icon={<MaterialIcons name="chat-bubble-outline" size={14} color={COLORS.textOnDark} />}
                 onPress={handleChat}
               />
-
               <PeerlyButton
                 title="Schedule"
                 backgroundColor={COLORS.buttonYellow}
@@ -231,7 +206,6 @@ export default function UserProfileScreen({
                 style={styles.actionButton}
                 onPress={handleSchedule}
               />
-
               <PeerlyButton
                 title="Cancel"
                 backgroundColor={COLORS.red}
@@ -251,144 +225,102 @@ export default function UserProfileScreen({
           </View>
         )}
 
-        {/* OTHER USER – OUTGOING: Chat / Cancel */}
-        {!isSelf &&
-          isOutgoingView &&
-          !isIncomingView &&
-          !isActiveView && (
-            <View style={styles.bottomActions}>
-              <View style={styles.actionsRow}>
-                <PeerlyButton
-                  title="Chat"
-                  backgroundColor={COLORS.buttonBlack}
-                  textColor={COLORS.textOnDark}
-                  style={styles.actionButton}
-                  icon={
-                    <MaterialIcons
-                      name="chat-bubble-outline"
-                      size={14}
-                      color={COLORS.textOnDark}
-                    />
-                  }
-                  onPress={handleChat}
-                />
-
-                <PeerlyButton
-                  title="Cancel"
-                  backgroundColor={COLORS.red}
-                  textColor={COLORS.textOnDark}
-                  style={styles.actionButton}
-                  onPress={handleCancel}
-                />
-              </View>
+        {/* OUTGOING */}
+        {!isSelf && isOutgoingView && !isIncomingView && !isActiveView && (
+          <View style={[styles.bottomActions, { paddingBottom: bottomPad }]}>
+            <View style={styles.actionsRow}>
+              <PeerlyButton
+                title="Chat"
+                backgroundColor={COLORS.buttonBlack}
+                textColor={COLORS.textOnDark}
+                style={styles.actionButton}
+                icon={<MaterialIcons name="chat-bubble-outline" size={14} color={COLORS.textOnDark} />}
+                onPress={handleChat}
+              />
+              <PeerlyButton
+                title="Cancel"
+                backgroundColor={COLORS.red}
+                textColor={COLORS.textOnDark}
+                style={styles.actionButton}
+                onPress={handleCancel}
+              />
             </View>
-          )}
+          </View>
+        )}
 
-        {/* OTHER USER – COMPLETED:
-            Same layout as Active, but Schedule/Cancel disabled + "COMPLETED ✓" label */}
-        {!isSelf &&
-          isCompletedView &&
-          !isIncomingView &&
-          !isActiveView &&
-          !isOutgoingView && (
-            <View style={styles.bottomActions}>
-              <View style={styles.actionsRow}>
-                <PeerlyButton
-                  title="Chat"
-                  backgroundColor={COLORS.buttonBlack}
-                  textColor={COLORS.textOnDark}
-                  style={styles.actionButton}
-                  icon={
-                    <MaterialIcons
-                      name="chat-bubble-outline"
-                      size={14}
-                      color={COLORS.textOnDark}
-                    />
-                  }
-                  onPress={handleChat}
-                />
-
-                <PeerlyButton
-                  title="Schedule"
-                  backgroundColor={COLORS.searchBar}
-                  textColor={COLORS.textMuted}
-                  style={styles.actionButton}
-                  disabled
-                />
-
-                <PeerlyButton
-                  title="Cancel"
-                  backgroundColor={COLORS.searchBar}
-                  textColor={COLORS.textMuted}
-                  style={styles.actionButton}
-                  disabled
-                />
-              </View>
-
-              <Text style={styles.completedText}>COMPLETED ✓</Text>
+        {/* COMPLETED */}
+        {!isSelf && isCompletedView && !isIncomingView && !isActiveView && !isOutgoingView && (
+          <View style={[styles.bottomActions, { paddingBottom: bottomPad }]}>
+            <View style={styles.actionsRow}>
+              <PeerlyButton
+                title="Chat"
+                backgroundColor={COLORS.buttonBlack}
+                textColor={COLORS.textOnDark}
+                style={styles.actionButton}
+                icon={<MaterialIcons name="chat-bubble-outline" size={14} color={COLORS.textOnDark} />}
+                onPress={handleChat}
+              />
+              <PeerlyButton
+                title="Schedule"
+                backgroundColor={COLORS.searchBar}
+                textColor={COLORS.textMuted}
+                style={styles.actionButton}
+                disabled
+              />
+              <PeerlyButton
+                title="Cancel"
+                backgroundColor={COLORS.searchBar}
+                textColor={COLORS.textMuted}
+                style={styles.actionButton}
+                disabled
+              />
             </View>
-          )}
+            <Text style={styles.completedText}>COMPLETED ✓</Text>
+          </View>
+        )}
 
-        {/* OTHER USER – HISTORY (Canceled / Declined): Delete only */}
-        {!isSelf &&
-          isHistoryView &&
-          !isIncomingView &&
-          !isActiveView &&
-          !isOutgoingView &&
-          !isCompletedView && (
-            <View style={styles.bottomActions}>
-              <View style={styles.actionsRow}>
-                <PeerlyButton
-                  title="Delete"
-                  backgroundColor={COLORS.red}
-                  textColor={COLORS.textOnDark}
-                  style={styles.actionButton}
-                  onPress={handleDelete}
-                />
-              </View>
+        {/* HISTORY */}
+        {!isSelf && isHistoryView && !isIncomingView && !isActiveView && !isOutgoingView && !isCompletedView && (
+          <View style={[styles.bottomActions, { paddingBottom: bottomPad }]}>
+            <View style={styles.actionsRow}>
+              <PeerlyButton
+                title="Delete"
+                backgroundColor={COLORS.red}
+                textColor={COLORS.textOnDark}
+                style={styles.actionButton}
+                onPress={handleDelete}
+              />
             </View>
-          )}
+          </View>
+        )}
 
-        {/* OTHER USER – DEFAULT VIEW: Chat / Request / Offer */}
-        {!isSelf &&
-          !isIncomingView &&
-          !isActiveView &&
-          !isOutgoingView &&
-          !isCompletedView &&
-          !isHistoryView && (
-            <View style={styles.bottomActions}>
-              <View style={styles.actionsRow}>
-                <PeerlyButton
-                  title="Chat"
-                  backgroundColor={COLORS.buttonBlack}
-                  textColor={COLORS.textOnDark}
-                  style={styles.actionButton}
-                  icon={
-                    <MaterialIcons
-                      name="chat-bubble-outline"
-                      size={14}
-                      color={COLORS.textOnDark}
-                    />
-                  }
-                  onPress={handleChat}
-                />
-
-                <PeerlyButton
-                  title="Request"
-                  backgroundColor={COLORS.buttonYellow}
-                  textColor={COLORS.textPrimary}
-                  style={styles.actionButton}
-                />
-
-                <PeerlyButton
-                  title="Offer"
-                  backgroundColor={COLORS.buttonGreen}
-                  textColor={COLORS.textOnDark}
-                  style={styles.actionButton}
-                />
-              </View>
+        {/* DEFAULT */}
+        {!isSelf && !isIncomingView && !isActiveView && !isOutgoingView && !isCompletedView && !isHistoryView && (
+          <View style={[styles.bottomActions, { paddingBottom: bottomPad }]}>
+            <View style={styles.actionsRow}>
+              <PeerlyButton
+                title="Chat"
+                backgroundColor={COLORS.buttonBlack}
+                textColor={COLORS.textOnDark}
+                style={styles.actionButton}
+                icon={<MaterialIcons name="chat-bubble-outline" size={14} color={COLORS.textOnDark} />}
+                onPress={handleChat}
+              />
+              <PeerlyButton
+                title="Request"
+                backgroundColor={COLORS.buttonYellow}
+                textColor={COLORS.textPrimary}
+                style={styles.actionButton}
+              />
+              <PeerlyButton
+                title="Offer"
+                backgroundColor={COLORS.buttonGreen}
+                textColor={COLORS.textOnDark}
+                style={styles.actionButton}
+              />
             </View>
-          )}
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -397,18 +329,16 @@ export default function UserProfileScreen({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
 
-  // Bottom area is a column so we can add multiple rows (e.g. Complete / Completed label)
   bottomActions: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 12,
     backgroundColor: COLORS.background,
   },
 
-  // Row that lays out the main action buttons horizontally
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -432,9 +362,14 @@ const styles = StyleSheet.create({
   },
 
   selfActions: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingTop: 20,
+    backgroundColor: COLORS.background,
   },
 
   halfButton: {

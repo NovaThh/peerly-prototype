@@ -47,7 +47,7 @@ export default function RegisterPhotoScreen() {
       <View style={styles.container}>
         {/* Back */}
         <Pressable
-          onPress={() => router.replace('/register/credentials')}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/register/credentials'))}
           style={styles.back}
         >
           <Feather

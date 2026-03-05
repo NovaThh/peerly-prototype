@@ -1,4 +1,3 @@
-// app/(tabs)/users/[id].tsx
 import { useLocalSearchParams } from 'expo-router';
 import UserProfileScreen from '@/features/users/screens/UserProfileScreen';
 

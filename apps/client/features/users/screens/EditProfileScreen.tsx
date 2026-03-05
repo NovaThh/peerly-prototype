@@ -87,7 +87,7 @@ export default function EditProfileScreen() {
       profile_image_url: photoUri
     });
 
-    router.replace('/profile');
+    router.back();
   };
 
   return (
@@ -100,7 +100,7 @@ export default function EditProfileScreen() {
 
             <Pressable
               style={styles.backButton}
-              onPress={() => router.replace('/profile')}
+              onPress={() => router.back()}
             >
               <Feather name="arrow-left" size={22} />
             </Pressable>
@@ -151,7 +151,7 @@ export default function EditProfileScreen() {
               backgroundColor={COLORS.red}
               textColor="#fff"
               style={{ flex: 1, marginLeft: 6 }}
-              onPress={() => router.replace('/profile')}
+              onPress={() => router.back()}
             />
           </View>
         </View>
