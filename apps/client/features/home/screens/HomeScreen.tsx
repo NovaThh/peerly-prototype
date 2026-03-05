@@ -7,6 +7,7 @@ import FilterToggle, { FilterType } from '../components/FilterToggle';
 import UserCard from '../components/UserCard';
 import { COLORS } from '@/constants/theme';
 import { useUsers } from '@/features/users/store/usersStore';
+import { getLoggedInUserId } from '@/shared/store/auth';
 
 export default function HomeScreen() {
   const [search, setSearch] = useState('');
@@ -15,25 +16,23 @@ export default function HomeScreen() {
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
+    const me = getLoggedInUserId();
 
-    return users.filter((user) => {
-      if (!query) return true;
+    return users
+      .filter((u) => u.id !== me) // hide self
+      .filter((user) => {
+        if (!query) return true;
 
-      const goodAtMatch = user.strengths.some((s) =>
-        s.toLowerCase().includes(query)
-      );
+        const goodAtMatch = user.strengths.some((s) => s.toLowerCase().includes(query));
+        const needHelpMatch = user.needs_help_with.some((s) => s.toLowerCase().includes(query));
 
-      const needHelpMatch = user.needs_help_with.some((s) =>
-        s.toLowerCase().includes(query)
-      );
+        if (!filter) return goodAtMatch || needHelpMatch;
+        if (filter === 'GOOD_AT') return goodAtMatch;
+        if (filter === 'NEED_HELP') return needHelpMatch;
 
-      if (!filter) return goodAtMatch || needHelpMatch;
-      if (filter === 'GOOD_AT') return goodAtMatch;
-      if (filter === 'NEED_HELP') return needHelpMatch;
-
-      return true;
-    });
-  }, [search, filter]);
+        return true;
+      });
+  }, [users, search, filter]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

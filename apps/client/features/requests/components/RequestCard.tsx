@@ -136,10 +136,16 @@ export default function RequestCard({
     );
   }
 
-  // Active Sessions: ACCEPTED → Chat, Cancel
+  const handleComplete = () => {
+    //TODO: for the final product, we need 2 complete confirm from both user
+    onChangeStatus(request.id, 'COMPLETED');
+  };
+
+  // Active Sessions: ACCEPTED → Chat, Cancel, COMPLETE
   if (context === 'active' && status === 'ACCEPTED') {
     actions.push(
       { label: 'Chat', onPress: handleChat },
+      { label: 'Complete', onPress: handleComplete },
       { label: 'Cancel', onPress: handleCancel },
     );
   }

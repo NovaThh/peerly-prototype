@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Request, RequestStatus } from '../data/types';
+import type { Request, RequestStatus, RequestType } from '../data/types';
 
 const STORAGE_KEY = 'peerly_requests';
 
@@ -66,4 +66,18 @@ export async function deleteRequest(id: string) {
 
 export function findRequest(id: string) {
   return requests.find((r) => r.id === id);
+}
+
+export function hasPendingBetween(a: string, b: string, type?: RequestType) {
+  return requests.some((r) => {
+    const samePair =
+      (r.requester_id === a && r.receiver_id === b) ||
+      (r.requester_id === b && r.receiver_id === a);
+
+    const pending = r.status === 'PENDING';
+
+    const typeOk = type ? r.type === type : true;
+
+    return samePair && pending && typeOk;
+  });
 }

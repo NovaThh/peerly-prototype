@@ -11,20 +11,14 @@ type Props = {
   backTo?: BackToType;
 };
 
-export default function ProfileHeader({
-  user,
-  showBack = true,
-  backTo,
-}: Props) {
+export default function ProfileHeader({ user, showBack = true, backTo }: Props) {
   return (
     <View style={styles.container}>
       <Image source={{ uri: user.profile_image_url }} style={styles.image} />
 
       <View style={styles.bottomScrim} />
 
-      {showBack && backTo && (
-        <BackButton to={backTo} />
-      )}
+      {showBack && <BackButton to={backTo} />}
 
       <View style={styles.nameContainer}>
         <Text style={styles.name}>{user.name}</Text>

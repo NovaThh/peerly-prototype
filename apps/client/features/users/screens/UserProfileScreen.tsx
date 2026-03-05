@@ -13,8 +13,14 @@ import { logout } from '@/shared/store/auth';
 import { router } from 'expo-router';
 import { setRequestStatus, deleteRequest } from '@/features/requests/store/requestsStore';
 import { useUsers } from '@/features/users/store/usersStore';
+import { addRequest, hasPendingBetween } from '@/features/requests/store/requestsStore';
+import { createRequest } from '@/features/requests/helper/createRequest';
 import type { RequestStatus } from '@/features/requests/data/types';
 import StudySessionSchedulePlaceholder from '../components/StudySessionSchedulePlaceholder';
+import { getLoggedInUserId } from '@/shared/store/auth';
+import { Alert } from 'react-native';
+import SubjectPickerModal from '@/features/requests/components/SubjectPickerModal';
+import { useState } from 'react';
 
 type RequestContext =
   | 'incoming'
@@ -67,6 +73,15 @@ export default function UserProfileScreen({
     cb?.();
   };
 
+  const [subjectModalOpen, setSubjectModalOpen] = useState(false);
+  const [pendingType, setPendingType] = useState<'REQUEST' | 'OFFER' | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+
+  const subjectOptions = useMemo(() => {
+    if (!pendingType) return [];
+    return pendingType === 'REQUEST' ? user.strengths : user.needs_help_with;
+  }, [pendingType, user.strengths, user.needs_help_with]);
+
   const handleChat = () => {
     console.log('Chat from profile with', user.name, 'requestId:', requestId);
   };
@@ -80,8 +95,9 @@ export default function UserProfileScreen({
     router.back();
   };
 
-  const handleComplete = () => {
-    console.log('Complete Clicked');
+  const handleComplete = async () => {
+    //TODO: for final product, we need both users to complete
+    await withRequest('COMPLETED', () => router.back());
   };
 
   const handleSchedule = () => {
@@ -90,6 +106,35 @@ export default function UserProfileScreen({
       pathname: '/requests/schedule-session',
       params: { requestId },
     });
+  };
+
+  const me = getLoggedInUserId();
+
+  const handleSend = async (type: 'REQUEST' | 'OFFER') => {
+    if (!me) {
+      router.push('/login');
+      return;
+    }
+
+    if (me === userId) return; // can't request yourself
+
+    // optional duplicate prevention
+    if (hasPendingBetween?.(me, userId, type)) {
+      Alert.alert('Already sent', 'You already have a pending invitation with this user.');
+      return;
+    }
+
+    const newReq = createRequest({
+      requesterId: me,
+      receiverId: userId,
+      type,
+      subject: 'General', // later you can let user choose
+    });
+
+    await addRequest(newReq);
+
+    // Take sender to Requests tab (optional but makes it feel like it worked)
+    router.push('/requests');
   };
 
   const bottomPad = 12 + insets.bottom;
@@ -311,17 +356,63 @@ export default function UserProfileScreen({
                 backgroundColor={COLORS.buttonYellow}
                 textColor={COLORS.textPrimary}
                 style={styles.actionButton}
+                onPress={() => {
+                  const me = getLoggedInUserId();
+                  if (!me) return router.push('/login');
+                  setPendingType('REQUEST');
+                  setSelectedSubject(null);
+                  setSubjectModalOpen(true);
+                }}
               />
+
               <PeerlyButton
                 title="Offer"
                 backgroundColor={COLORS.buttonGreen}
                 textColor={COLORS.textOnDark}
                 style={styles.actionButton}
+                onPress={() => {
+                  const me = getLoggedInUserId();
+                  if (!me) return router.push('/login');
+                  setPendingType('OFFER');
+                  setSelectedSubject(null);
+                  setSubjectModalOpen(true);
+                }}
               />
             </View>
           </View>
         )}
       </View>
+      <SubjectPickerModal
+        visible={subjectModalOpen}
+        title={
+          pendingType === 'REQUEST'
+            ? 'Pick a subject to request help with'
+            : 'Pick a subject to offer help with'
+        }
+        options={subjectOptions}
+        selected={selectedSubject}
+        onSelect={setSelectedSubject}
+        onClose={() => setSubjectModalOpen(false)}
+        confirmLabel={pendingType === 'REQUEST' ? 'Send Request' : 'Send Offer'}
+        onConfirm={async () => {
+          const me = getLoggedInUserId();
+          if (!me || !pendingType || !selectedSubject) return;
+
+          if (me === userId) return;
+
+          await addRequest(
+            createRequest({
+              requesterId: me,
+              receiverId: userId,
+              type: pendingType,
+              subject: selectedSubject,
+            })
+          );
+
+          setSubjectModalOpen(false);
+          router.push('/requests');
+        }}
+      />
     </SafeAreaView>
   );
 }

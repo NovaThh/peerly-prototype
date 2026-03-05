@@ -6,6 +6,7 @@ import { View } from "react-native";
 import { useEffect } from "react";
 
 import { initUsers } from "@/features/users/store/usersStore";
+import { loadRequests } from "@/features/requests/store/requestsStore";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -15,6 +16,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     initUsers();
+    loadRequests();
   }, []);
 
   if (!fontsLoaded) {
