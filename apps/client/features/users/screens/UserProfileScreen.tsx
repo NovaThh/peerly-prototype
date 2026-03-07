@@ -22,6 +22,7 @@ import { Alert } from 'react-native';
 import SubjectPickerModal from '@/features/requests/components/SubjectPickerModal';
 import { useState } from 'react';
 import { requireAuth } from '@/shared/utils/requireAuth';
+import { Share } from 'react-native';
 
 type RequestContext =
   | 'incoming'
@@ -146,6 +147,21 @@ export default function UserProfileScreen({
 
   const bottomPad = 12 + insets.bottom;
 
+  const handleShareProfile = async () => {
+    try {
+      //TODO: uncomment this once we have an official domain from Jan Willem, now its google :D
+      // const profileUrl = `https://peerly.saxion.online/users/${user.id}`;
+      const profileUrl = `https://google.com`;
+
+      await Share.share({
+        message: `Hey! Connect with me on Peerly to exchange academic knowledge.\n\n${profileUrl}`,
+        title: `Peerly profile - ${user.name}`,
+      });
+    } catch (error) {
+      console.log('Share error', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={{ flex: 1 }}>
@@ -184,6 +200,15 @@ export default function UserProfileScreen({
         {/* SELF ACTIONS */}
         {isSelf && (
           <View style={[styles.selfActions, { paddingBottom: bottomPad }]}>
+            <PeerlyButton
+              title="Share"
+              backgroundColor="transparent"
+              textColor={COLORS.textPrimary}
+              borderColor={COLORS.textMuted}
+              style={styles.thirdButton}
+              icon={<Feather name="share" size={16} color={COLORS.textPrimary} />}
+              onPress={handleShareProfile}
+            />
             <PeerlyButton
               title="Edit"
               backgroundColor="transparent"
@@ -473,5 +498,10 @@ const styles = StyleSheet.create({
   halfButton: {
     flex: 1,
     marginHorizontal: 6,
+  },
+
+  thirdButton: {
+    flex: 1,
+    marginHorizontal: 4,
   },
 });
