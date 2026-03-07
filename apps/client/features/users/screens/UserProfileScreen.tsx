@@ -11,7 +11,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Feather from '@expo/vector-icons/Feather';
 import { logout } from '@/shared/store/auth';
 import { router } from 'expo-router';
-import { setRequestStatus, deleteRequest } from '@/features/requests/store/requestsStore';
+import { setRequestStatus, deleteRequest, setRequestSchedule, findRequest, useRequests } from '@/features/requests/store/requestsStore';
 import { useUsers } from '@/features/users/store/usersStore';
 import { addRequest, hasPendingBetween } from '@/features/requests/store/requestsStore';
 import { createRequest } from '@/features/requests/helper/createRequest';
@@ -162,6 +162,13 @@ export default function UserProfileScreen({
     }
   };
 
+  const requests = useRequests();
+
+  const currentRequest = useMemo(() => {
+    if (!requestId) return null;
+    return requests.find((r) => r.id === requestId) ?? null;
+  }, [requests, requestId]);
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={{ flex: 1 }}>
@@ -186,7 +193,7 @@ export default function UserProfileScreen({
 
           {(isActiveView || isCompletedView) && (
             <ProfileSection title="Study Session Schedule">
-              <StudySessionSchedulePlaceholder />
+              <StudySessionSchedulePlaceholder scheduledDatetime={currentRequest?.scheduled_datetime} />
             </ProfileSection>
           )}
 
@@ -199,7 +206,7 @@ export default function UserProfileScreen({
 
         {/* SELF ACTIONS */}
         {isSelf && (
-          <View style={[styles.selfActions, { paddingBottom: bottomPad }]}>
+          <View style={[styles.selfActions, { paddingBottom: 20 }]}>
             <PeerlyButton
               title="Share"
               backgroundColor="transparent"

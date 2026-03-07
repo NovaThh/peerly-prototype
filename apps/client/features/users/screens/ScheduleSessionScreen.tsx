@@ -1,4 +1,3 @@
-// features/requests/screens/ScheduleSessionScreen.tsx
 import { useState } from 'react';
 import {
   View,
@@ -13,6 +12,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { COLORS } from '@/constants/theme';
 import PeerlyButton from '@/shared/components/ui/PeerlyButton';
 import BackButton from '@/shared/components/ui/BackButton';
+import { setRequestSchedule } from '@/features/requests/store/requestsStore';
 
 export default function ScheduleSessionScreen() {
   const { requestId } = useLocalSearchParams<{ requestId?: string }>();
@@ -25,93 +25,138 @@ export default function ScheduleSessionScreen() {
   const [ampm, setAmpm] = useState<'AM' | 'PM'>('AM');
   const [error, setError] = useState<string | null>(null);
 
-  const buildDate = () => {
+  const validateSchedule = (): { date: Date | null; error: string | null } => {
     const d = parseInt(day, 10);
     const m = parseInt(month, 10);
     const y = parseInt(year, 10);
-    const hRaw = parseInt(hour, 10);
+    const h12 = parseInt(hour, 10);
     const min = parseInt(minute, 10);
 
-    if (!d || !m || !y || isNaN(hRaw) || isNaN(min)) return null;
+    if (!day || !month || !year || !hour || !minute) {
+      return {
+        date: null,
+        error: 'Please fill in all date and time fields.',
+      };
+    }
 
-    let h24 = hRaw % 12;
-    if (ampm === 'PM') h24 += 12;
+    if (isNaN(d) || isNaN(m) || isNaN(y)) {
+      return {
+        date: null,
+        error: 'Please enter a valid date.',
+      };
+    }
 
-    // Interpret picked time as UTC, not local.
-    const date = new Date(Date.UTC(y, m - 1, d, h24, min, 0, 0));
-    if (isNaN(date.getTime())) return null;
-    return date;
+    if (m < 1 || m > 12) {
+      return {
+        date: null,
+        error: 'Month must be between 1 and 12.',
+      };
+    }
+
+    if (d < 1 || d > 31) {
+      return {
+        date: null,
+        error: 'Day must be between 1 and 31.',
+      };
+    }
+
+    if (isNaN(h12)) {
+      return {
+        date: null,
+        error: 'Please enter a valid hour.',
+      };
+    }
+
+    if (h12 < 1 || h12 > 12) {
+      return {
+        date: null,
+        error: 'Hour must be between 1 and 12.',
+      };
+    }
+
+    if (isNaN(min)) {
+      return {
+        date: null,
+        error: 'Please enter a valid minute.',
+      };
+    }
+
+    if (min < 0 || min > 59) {
+      return {
+        date: null,
+        error: 'Minute must be between 0 and 59.',
+      };
+    }
+
+    let h24: number;
+    if (ampm === 'AM') {
+      h24 = h12 === 12 ? 0 : h12;
+    } else {
+      h24 = h12 === 12 ? 12 : h12 + 12;
+    }
+
+    const date = new Date(y, m - 1, d, h24, min, 0, 0);
+
+    if (
+      date.getFullYear() !== y ||
+      date.getMonth() !== m - 1 ||
+      date.getDate() !== d
+    ) {
+      return {
+        date: null,
+        error: 'Please enter a real calendar date.',
+      };
+    }
+
+    const now = new Date();
+    if (date.getTime() <= now.getTime()) {
+      return {
+        date: null,
+        error: 'Date and time must be in the future.',
+      };
+    }
+
+    return {
+      date,
+      error: null,
+    };
   };
 
   const handleHourChange = (text: string) => {
     setError(null);
 
-    if (text === '') {
-      setHour('');
-      return;
-    }
+    const digitsOnly = text.replace(/\D/g, '');
 
-    let h = parseInt(text, 10);
-    if (isNaN(h)) return;
+    if (digitsOnly.length > 2) return;
 
-    // clamp to 0–23
-    if (h < 0) h = 0;
-    if (h > 23) h = 23;
-
-    // if user types 12–23 while AM is selected, auto-switch to PM
-    if (h >= 12 && ampm === 'AM') {
-      setAmpm('PM');
-    }
-
-    setHour(h.toString().padStart(2, '0'));
+    setHour(digitsOnly);
   };
 
   const handleMinuteChange = (text: string) => {
     setError(null);
 
-    if (text === '') {
-      setMinute('');
-      return;
-    }
+    const digitsOnly = text.replace(/\D/g, '');
 
-    let m = parseInt(text, 10);
-    if (isNaN(m)) return;
+    if (digitsOnly.length > 2) return;
 
-    // clamp to 0–59
-    if (m < 0) m = 0;
-    if (m > 59) m = 59;
-
-    setMinute(m.toString().padStart(2, '0'));
+    setMinute(digitsOnly);
   };
 
-  const handleSave = () => {
-    // basic empty check
-    if (!day || !month || !year || !hour || !minute) {
-      setError('Please fill in all date and time fields.');
+  const handleSave = async () => {
+    if (!requestId) {
+      setError('Missing request ID.');
       return;
     }
 
-    const date = buildDate();
-    if (!date) {
-      setError('Please enter a valid date and time.');
-      return;
-    }
+    const { date, error } = validateSchedule();
 
-    const now = new Date();
-    if (date.getTime() <= now.getTime()) {
-      setError('Date and time must be in the future.');
+    if (error || !date) {
+      setError(error);
       return;
     }
 
     setError(null);
-
-    console.log(
-      'Save schedule for request',
-      requestId,
-      '=>',
-      date.toISOString(),
-    );
-    // TODO: connect to request store, e.g. setRequestSchedule(requestId, date.toISOString())
+    await setRequestSchedule(requestId, date.toISOString());
     router.back();
   };
 
@@ -133,7 +178,6 @@ export default function ScheduleSessionScreen() {
         <View style={styles.content}>
           <Text style={styles.label}>Date</Text>
           <View style={styles.dateRow}>
-            {/* DD first */}
             <TextInput
               style={styles.dateInput}
               placeholder="DD"
@@ -143,7 +187,7 @@ export default function ScheduleSessionScreen() {
               value={day}
               onChangeText={(val) => {
                 setError(null);
-                setDay(val);
+                setDay(val.replace(/\D/g, ''));
               }}
             />
             <TextInput
@@ -155,7 +199,7 @@ export default function ScheduleSessionScreen() {
               value={month}
               onChangeText={(val) => {
                 setError(null);
-                setMonth(val);
+                setMonth(val.replace(/\D/g, ''));
               }}
             />
             <TextInput
@@ -167,7 +211,7 @@ export default function ScheduleSessionScreen() {
               value={year}
               onChangeText={(val) => {
                 setError(null);
-                setYear(val);
+                setYear(val.replace(/\D/g, ''));
               }}
             />
           </View>
@@ -230,7 +274,7 @@ export default function ScheduleSessionScreen() {
           {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
 
-        <View className="bottomButtons" style={styles.bottomButtons}>
+        <View style={styles.bottomButtons}>
           <PeerlyButton
             title="Save"
             backgroundColor={COLORS.buttonGreen}

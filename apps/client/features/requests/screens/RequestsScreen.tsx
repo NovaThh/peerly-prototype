@@ -12,28 +12,6 @@ import { isLoggedIn, getLoggedInUserId } from '@/shared/store/auth';
 export default function RequestsScreen() {
   const requests = useRequests();
 
-  // show login prompt first
-  if (!isLoggedIn()) {
-    return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <View style={styles.centered}>
-          <Text style={styles.title}>Please log in</Text>
-          <Text style={styles.subtitle}>
-            You need an account to manage requests and offers.
-          </Text>
-
-          <PeerlyButton
-            title="Go to Login"
-            backgroundColor={COLORS.buttonGreen}
-            textColor={COLORS.textOnDark}
-            onPress={() => router.push('/login')}
-            style={{ marginTop: 20, width: 200 }}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const currentUserId = getLoggedInUserId();
   if (!currentUserId) return null;
 
@@ -50,9 +28,15 @@ export default function RequestsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <Text style={styles.pageTitle}>All Requests and Offers</Text>
+      <View style={styles.headerBlock}>
+        <Text style={styles.pageTitle}>Requests & Offers</Text>
+        <Text style={styles.pageSubtitle}>
+          Manage incoming invites, active sessions, and completed help exchanges.
+        </Text>
+        <View style={styles.headerDivider} />
+      </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <RequestSection title="Active Sessions" count={activeSessions.length}>
           {activeSessions.map((r) => (
             <RequestCard
@@ -123,29 +107,41 @@ export default function RequestsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  container: { paddingHorizontal: 20, paddingBottom: 40 },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  centered: {
+  safe: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 30,
+    backgroundColor: COLORS.background,
   },
-  title: {
-    fontSize: 22,
+
+  headerBlock: {
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 14,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+
+  headerDivider: {
+    marginTop: 14,
+    width: '72%',
+    height: 1,
+    backgroundColor: '#aaaaaa',
+  },
+
+  container: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+
+  pageTitle: {
+    fontSize: 28,
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  subtitle: {
-    marginTop: 10,
+
+  pageSubtitle: {
+    marginTop: 6,
     fontSize: 14,
+    lineHeight: 20,
     color: COLORS.textSecondary,
     textAlign: 'center',
   },

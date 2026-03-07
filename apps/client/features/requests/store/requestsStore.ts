@@ -81,3 +81,13 @@ export function hasPendingBetween(a: string, b: string, type?: RequestType) {
     return samePair && pending && typeOk;
   });
 }
+
+//STUDY SESSION
+export async function setRequestSchedule(id: string, scheduledDatetime: string) {
+  requests = requests.map((r) =>
+    r.id === id ? { ...r, scheduled_datetime: scheduledDatetime } : r
+  );
+
+  await persist();
+  emit();
+}
