@@ -21,6 +21,7 @@ import { getLoggedInUserId } from '@/shared/store/auth';
 import { Alert } from 'react-native';
 import SubjectPickerModal from '@/features/requests/components/SubjectPickerModal';
 import { useState } from 'react';
+import { requireAuth } from '@/shared/utils/requireAuth';
 
 type RequestContext =
   | 'incoming'
@@ -83,10 +84,16 @@ export default function UserProfileScreen({
   }, [pendingType, user.strengths, user.needs_help_with]);
 
   const handleChat = () => {
-    console.log('Chat from profile with', user.name, 'requestId:', requestId);
+    const me = requireAuth();
+    if (!me) return;
+    console.log('To be implemented ... Chat from profile with', user.name);
   };
 
-  const handleAccept = () => withRequest('ACCEPTED', () => router.back());
+  const handleAccept = () => {
+    const me = requireAuth();
+    if (!me) return;
+    withRequest('ACCEPTED', () => router.back());
+  };
   const handleDecline = () => withRequest('DECLINED', () => router.back());
   const handleCancel = () => withRequest('CANCELED', () => router.back());
   const handleDelete = async () => {
@@ -357,8 +364,8 @@ export default function UserProfileScreen({
                 textColor={COLORS.textPrimary}
                 style={styles.actionButton}
                 onPress={() => {
-                  const me = getLoggedInUserId();
-                  if (!me) return router.push('/login');
+                  const me = requireAuth();
+                  if (!me) return;
                   setPendingType('REQUEST');
                   setSelectedSubject(null);
                   setSubjectModalOpen(true);
@@ -371,8 +378,8 @@ export default function UserProfileScreen({
                 textColor={COLORS.textOnDark}
                 style={styles.actionButton}
                 onPress={() => {
-                  const me = getLoggedInUserId();
-                  if (!me) return router.push('/login');
+                  const me = requireAuth();
+                  if (!me) return;
                   setPendingType('OFFER');
                   setSelectedSubject(null);
                   setSubjectModalOpen(true);
