@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.peerly.server.request.dto.CreateRequestDto;
 import com.peerly.server.request.dto.RequestResponseDto;
@@ -13,8 +16,6 @@ import com.peerly.server.session.StudySessionService;
 import com.peerly.server.user.UserRepository;
 import com.peerly.server.user.entity.User;
 
-import org.springframework.transaction.annotation.Transactional;
-
 @Service
 public class RequestService {
 
@@ -22,7 +23,8 @@ public class RequestService {
   private final UserRepository userRepository;
   private final StudySessionService studySessionService;
 
-  public RequestService(RequestRepository requestRepository,
+  public RequestService(
+      RequestRepository requestRepository,
       UserRepository userRepository,
       StudySessionService studySessionService) {
     this.requestRepository = requestRepository;
@@ -30,13 +32,16 @@ public class RequestService {
     this.studySessionService = studySessionService;
   }
 
-  public RequestResponseDto createRequest(CreateRequestDto dto) {
-
-    User requester = userRepository.findById(dto.getRequesterId())
-        .orElseThrow(() -> new RuntimeException("Requester not found"));
+  public RequestResponseDto createRequest(UUID currentUserId, CreateRequestDto dto) {
+    User requester = userRepository.findById(currentUserId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Requester not found"));
 
     User receiver = userRepository.findById(dto.getReceiverId())
-        .orElseThrow(() -> new RuntimeException("Receiver not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Receiver not found"));
+
+    if (requester.getId().equals(receiver.getId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot send a request to yourself");
+    }
 
     Request request = new Request();
     request.setRequester(requester);
@@ -47,27 +52,12 @@ public class RequestService {
     request.setStatus(RequestStatus.PENDING);
 
     Request saved = requestRepository.save(request);
-
     return mapToDto(saved);
-  }
-
-  public List<RequestResponseDto> getAllRequests() {
-    return requestRepository.findAll()
-        .stream()
-        .map(this::mapToDto)
-        .collect(Collectors.toList());
-  }
-
-  public RequestResponseDto getRequestById(UUID id) {
-    Request request = requestRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Request not found"));
-
-    return mapToDto(request);
   }
 
   public List<RequestResponseDto> getRequestsByUserId(UUID userId) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
     return requestRepository.findByRequesterOrReceiver(user, user)
         .stream()
@@ -75,44 +65,44 @@ public class RequestService {
         .collect(Collectors.toList());
   }
 
-  public List<RequestResponseDto> getOutgoingRequests(UUID requesterId) {
-    User requester = userRepository.findById(requesterId)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+  public RequestResponseDto getRequestByIdForUser(UUID id, UUID currentUserId) {
+    Request request = requestRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found"));
 
-    return requestRepository.findByRequester(requester)
-        .stream()
-        .map(this::mapToDto)
-        .collect(Collectors.toList());
-  }
-
-  public List<RequestResponseDto> getIncomingRequests(UUID receiverId) {
-    User receiver = userRepository.findById(receiverId)
-        .orElseThrow(() -> new RuntimeException("User not found"));
-
-    return requestRepository.findByReceiver(receiver)
-        .stream()
-        .map(this::mapToDto)
-        .collect(Collectors.toList());
+    assertParticipant(request, currentUserId);
+    return mapToDto(request);
   }
 
   @Transactional
-  public RequestResponseDto updateRequestStatus(UUID requestId, RequestStatus newStatus) {
-
+  public RequestResponseDto updateRequestStatus(UUID requestId, RequestStatus newStatus, UUID currentUserId) {
     Request request = requestRepository.findById(requestId)
-        .orElseThrow(() -> new RuntimeException("Request not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found"));
+
+    UUID requesterId = request.getRequester().getId();
+    UUID receiverId = request.getReceiver().getId();
+
+    if (currentUserId.equals(receiverId)) {
+      if (newStatus != RequestStatus.ACCEPTED && newStatus != RequestStatus.DECLINED) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+            "Receiver can only ACCEPT or DECLINE a request");
+      }
+    } else if (currentUserId.equals(requesterId)) {
+      if (newStatus != RequestStatus.CANCELED) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+            "Requester can only CANCEL a request");
+      }
+    } else {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot update this request");
+    }
 
     RequestStatus oldStatus = request.getStatus();
     request.setStatus(newStatus);
-
     Request saved = requestRepository.save(request);
 
-    // AUTOMATION RULES:
-    // PENDING -> ACCEPTED => create study session
     if (oldStatus == RequestStatus.PENDING && newStatus == RequestStatus.ACCEPTED) {
       studySessionService.createSessionForRequest(requestId);
     }
 
-    // ACCEPTED -> CANCELED => delete session
     if (newStatus == RequestStatus.CANCELED || newStatus == RequestStatus.DECLINED) {
       studySessionService.deleteSessionByRequestId(requestId);
     }
@@ -120,15 +110,28 @@ public class RequestService {
     return mapToDto(saved);
   }
 
-  public void deleteRequest(UUID id) {
+  public void deleteRequest(UUID id, UUID currentUserId) {
     Request request = requestRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Request not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found"));
+
+    assertParticipant(request, currentUserId);
+
     if (request.getStatus() != RequestStatus.CANCELED &&
         request.getStatus() != RequestStatus.DECLINED) {
-
-      throw new RuntimeException("Only CANCELED or DECLINED requests can be deleted");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "Only CANCELED or DECLINED requests can be deleted");
     }
+
     requestRepository.delete(request);
+  }
+
+  private void assertParticipant(Request request, UUID currentUserId) {
+    boolean isParticipant = request.getRequester().getId().equals(currentUserId) ||
+        request.getReceiver().getId().equals(currentUserId);
+
+    if (!isParticipant) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot access this request");
+    }
   }
 
   private RequestResponseDto mapToDto(Request request) {

@@ -11,27 +11,15 @@ import jakarta.validation.constraints.NotNull;
 public class CreateRequestDto {
 
   @NotNull
-  private UUID requesterId;
-
-  @NotNull
   private UUID receiverId;
 
   @NotBlank
   private String subject;
 
   @NotNull
-  private RequestType type; // REQUEST or OFFER
+  private RequestType type;
 
   private LocalDateTime scheduledDatetime;
-
-  // getters & setters
-  public UUID getRequesterId() {
-    return requesterId;
-  }
-
-  public void setRequesterId(UUID requesterId) {
-    this.requesterId = requesterId;
-  }
 
   public UUID getReceiverId() {
     return receiverId;

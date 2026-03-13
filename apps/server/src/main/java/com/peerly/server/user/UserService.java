@@ -4,9 +4,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.peerly.server.user.dto.UpdateUserRequestDto;
 import com.peerly.server.user.dto.UserRequestDto;
@@ -17,10 +18,11 @@ import com.peerly.server.user.entity.User;
 public class UserService {
 
   private final UserRepository userRepository;
-  private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+  private final PasswordEncoder passwordEncoder;
 
-  public UserService(UserRepository userRepository) {
+  public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
     this.userRepository = userRepository;
+    this.passwordEncoder = passwordEncoder;
   }
 
   public List<UserResponseDto> getAllUsers() {
@@ -32,15 +34,20 @@ public class UserService {
 
   public UserResponseDto getUserById(UUID id) {
     User user = userRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
     return mapToResponseDto(user);
   }
 
-  public UserResponseDto createUser(UserRequestDto dto) {
+  public UUID getUserIdByEmail(String email) {
+    return userRepository.findByEmail(email)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"))
+        .getId();
+  }
 
+  public UserResponseDto createUser(UserRequestDto dto) {
     if (userRepository.existsByEmail(dto.getEmail())) {
-      throw new RuntimeException("Email already in use");
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
     }
 
     User user = new User();
@@ -55,44 +62,40 @@ public class UserService {
     user.setProfileImageUrl(dto.getProfileImageUrl());
 
     User savedUser = userRepository.save(user);
-
     return mapToResponseDto(savedUser);
   }
 
   public UserResponseDto updateUser(UUID id, UpdateUserRequestDto dto) {
     User user = userRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
     if (!user.getEmail().equals(dto.getEmail()) && userRepository.existsByEmail(dto.getEmail())) {
-      throw new RuntimeException("Email already in use");
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
     }
+
     user.setName(dto.getName());
     user.setEmail(dto.getEmail());
     user.setMajor(dto.getMajor());
     user.setEducationLevel(dto.getEducationLevel());
-    // strength and needs help with are only received one value at a time according
-    // to front end design
-    if (null != dto.getStrengths()) {
-      String updatedStrengths = appendValue(user.getStrengths(), dto.getStrengths());
-      user.setStrengths(updatedStrengths);
+
+    if (dto.getStrengths() != null) {
+      user.setStrengths(appendValue(user.getStrengths(), dto.getStrengths()));
     }
 
-    if (null != dto.getNeedsHelpWith()) {
-      String updatedNeeds = appendValue(user.getNeedsHelpWith(), dto.getNeedsHelpWith());
-      user.setNeedsHelpWith(updatedNeeds);
+    if (dto.getNeedsHelpWith() != null) {
+      user.setNeedsHelpWith(appendValue(user.getNeedsHelpWith(), dto.getNeedsHelpWith()));
     }
 
     user.setDescription(dto.getDescription());
     user.setProfileImageUrl(dto.getProfileImageUrl());
 
-    User updateUser = userRepository.save(user);
-
-    return mapToResponseDto(updateUser);
+    User updatedUser = userRepository.save(user);
+    return mapToResponseDto(updatedUser);
   }
 
   public void deleteUser(UUID id) {
     User user = userRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     userRepository.delete(user);
   }
 

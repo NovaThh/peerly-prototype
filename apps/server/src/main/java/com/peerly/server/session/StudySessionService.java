@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.peerly.server.request.RequestRepository;
 import com.peerly.server.request.entity.Request;
@@ -18,44 +20,46 @@ public class StudySessionService {
   private final StudySessionRepository studySessionRepository;
   private final RequestRepository requestRepository;
 
-  public StudySessionService(StudySessionRepository studySessionRepository,
+  public StudySessionService(
+      StudySessionRepository studySessionRepository,
       RequestRepository requestRepository) {
     this.studySessionRepository = studySessionRepository;
     this.requestRepository = requestRepository;
   }
 
-  // READ all (debug/admin)
-  public List<StudySessionResponseDto> getAllSessions() {
+  public List<StudySessionResponseDto> getAllSessionsForUser(UUID currentUserId) {
     return studySessionRepository.findAll()
         .stream()
+        .filter(session -> isParticipant(session, currentUserId))
         .map(this::mapToDto)
         .collect(Collectors.toList());
   }
 
-  // READ by session id
-  public StudySessionResponseDto getSessionById(UUID sessionId) {
+  public StudySessionResponseDto getSessionByIdForUser(UUID sessionId, UUID currentUserId) {
     StudySession session = studySessionRepository.findById(sessionId)
-        .orElseThrow(() -> new RuntimeException("Study session not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Study session not found"));
+
+    assertParticipant(session, currentUserId);
     return mapToDto(session);
   }
 
-  // READ by request id (important for frontend)
-  public StudySessionResponseDto getSessionByRequestId(UUID requestId) {
+  public StudySessionResponseDto getSessionByRequestId(UUID requestId, UUID currentUserId) {
     StudySession session = studySessionRepository.findByRequest_Id(requestId)
-        .orElseThrow(() -> new RuntimeException("Study session not found for request"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Study session not found for request"));
+
+    assertParticipant(session, currentUserId);
     return mapToDto(session);
   }
 
-  // CREATE session for request (used automatically when request becomes ACCEPTED)
   public StudySessionResponseDto createSessionForRequest(UUID requestId) {
-
     if (studySessionRepository.existsByRequest_Id(requestId)) {
-      // session already exists; return existing
-      return getSessionByRequestId(requestId);
+      StudySession existing = studySessionRepository.findByRequest_Id(requestId)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Study session not found for request"));
+      return mapToDto(existing);
     }
 
     Request request = requestRepository.findById(requestId)
-        .orElseThrow(() -> new RuntimeException("Request not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Request not found"));
 
     StudySession session = new StudySession();
     session.setRequest(request);
@@ -65,27 +69,43 @@ public class StudySessionService {
     return mapToDto(saved);
   }
 
-  // UPDATE schedule
-  public StudySessionResponseDto updateSchedule(UUID requestId, UpdateStudySessionScheduleDto dto) {
+  public StudySessionResponseDto updateSchedule(
+      UUID requestId,
+      UpdateStudySessionScheduleDto dto,
+      UUID currentUserId) {
     StudySession session = studySessionRepository.findByRequest_Id(requestId)
-        .orElseThrow(() -> new RuntimeException("Study session not found for request"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Study session not found for request"));
 
+    assertParticipant(session, currentUserId);
     session.setScheduledDatetime(dto.getScheduledDatetime());
-    StudySession saved = studySessionRepository.save(session);
 
+    StudySession saved = studySessionRepository.save(session);
     return mapToDto(saved);
   }
 
-  // DELETE by session id
-  public void deleteSession(UUID sessionId) {
+  public void deleteSession(UUID sessionId, UUID currentUserId) {
     StudySession session = studySessionRepository.findById(sessionId)
-        .orElseThrow(() -> new RuntimeException("Study session not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Study session not found"));
+
+    assertParticipant(session, currentUserId);
     studySessionRepository.delete(session);
   }
 
-  // DELETE by request id (used automatically when request is canceled)
   public void deleteSessionByRequestId(UUID requestId) {
     studySessionRepository.deleteByRequest_Id(requestId);
+  }
+
+  private void assertParticipant(StudySession session, UUID currentUserId) {
+    if (!isParticipant(session, currentUserId)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot access this study session");
+    }
+  }
+
+  private boolean isParticipant(StudySession session, UUID currentUserId) {
+    UUID requesterId = session.getRequest().getRequester().getId();
+    UUID receiverId = session.getRequest().getReceiver().getId();
+
+    return requesterId.equals(currentUserId) || receiverId.equals(currentUserId);
   }
 
   private StudySessionResponseDto mapToDto(StudySession s) {

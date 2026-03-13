@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.peerly.server.user.dto.UpdateUserRequestDto;
 import com.peerly.server.user.dto.UserRequestDto;
@@ -19,6 +21,10 @@ public class UserController {
 
   public UserController(UserService userService) {
     this.userService = userService;
+  }
+
+  private UUID getCurrentUserId(Authentication authentication) {
+    return userService.getUserIdByEmail(authentication.getName());
   }
 
   @GetMapping("/users")
@@ -40,14 +46,25 @@ public class UserController {
   @PutMapping("/users/{id}")
   public UserResponseDto updateUser(
       @PathVariable UUID id,
-      @Valid @RequestBody UpdateUserRequestDto dto) {
+      @Valid @RequestBody UpdateUserRequestDto dto,
+      Authentication authentication) {
+
+    UUID currentUserId = getCurrentUserId(authentication);
+    if (!currentUserId.equals(id)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only update your own profile");
+    }
 
     return userService.updateUser(id, dto);
   }
 
   @DeleteMapping("/users/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void deleteUserById(@PathVariable UUID id) {
+  public void deleteUserById(@PathVariable UUID id, Authentication authentication) {
+    UUID currentUserId = getCurrentUserId(authentication);
+    if (!currentUserId.equals(id)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own account");
+    }
+
     userService.deleteUser(id);
   }
 }
