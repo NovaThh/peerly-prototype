@@ -44,21 +44,22 @@ Before running the app, ensure you have the following installed:
 - Scan the QR code displayed in the terminal.
 - The app will load on your device.
 
-## App Features & Testing
+### Option 3: Browser
+- After running npx expo start in the project terminal, there should be a line "Web is waiting on http://localhost:<port_number>"
 
-- **Seeded Users**: The app auto-seeds 5 test users on startup (only in development mode).
-  - Log in with any of these credentials:
-    - alice@example.com / password123
-    - bob@example.com / password123
-    - charlie@example.com / password123
-    - diana@example.com / password123
-    - eve@example.com / password123
-- **Navigation**: Explore home screen, user profiles, requests, and settings.
-- **Data Storage**: Uses local AsyncStorage (no backend required for this prototype).
+## Credentials
+  
+| Email             | Password    |
+| ----------------- | ----------- |
+| alice@example.com | password123 |
+| bob@example.com   | password123 |
+
+Other credentials can be found in `apps\client\scripts\seedUsers.ts`
+
 
 ## Common Issues & Fixes
 
-### 1. "Port ---- is already in use"
+### 1. "Port xxxx is already in use"
 - **Cause**: Another process is using the port.
 - **Fix**: Kill the process or change port:
   ```
@@ -109,14 +110,4 @@ For more help, refer to [Expo Documentation](https://docs.expo.dev/) or the proj
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
