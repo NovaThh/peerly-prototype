@@ -15,16 +15,17 @@ Before running the app, ensure you have the following installed:
 
 ## Setup Instructions
 
-1. **Extract the Zip File**: Unzip the submitted `client.zip` file to a directory on your machine.
+1. **Extract the Zip File**: Unzip the submitted `HD-ReactNative-Prototype` file to a directory on your machine.
 
 2. **Install Dependencies**:
-   Open a terminal/command prompt in the extracted folder and run:
+   Open a terminal/command prompt in the extracted folder, navigate to `apps/client` and run:
    ```
    npm install
    ```
    This may take a few minutes.
 
 3. **Start the Development Server**:
+   - Make sure to be in `apps/client` and run:
    ```
    npx expo start
    ```
