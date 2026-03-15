@@ -1,7 +1,6 @@
 package com.peerly.server.security;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import java.util.UUID;
 
