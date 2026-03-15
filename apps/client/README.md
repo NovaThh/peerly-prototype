@@ -37,11 +37,12 @@ Before running the app, ensure you have the following installed:
 - Ensure Android Studio is running and an emulator is started.
 - In the terminal, press a to open the emulator, the app will build and launch in the emulator.
 
-### Option 2: Physical Android Device
+### Option 2: Physical Android Device (Recommended)
 - Connect your phone and computer to the **same Wi-Fi network** (important for connection).
 - In the terminal, press s to switch to Expo go
 - Open the Expo Go app on your phone.
 - Scan the QR code displayed in the terminal.
+- Click on Expo Go.
 - The app will load on your device.
 
 ### Option 3: Browser
