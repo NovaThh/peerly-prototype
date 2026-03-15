@@ -58,6 +58,12 @@ export async function deleteUser(id: string) {
   emit();
 }
 
+export async function clearUsers() {
+  users = [];
+  await save(STORAGE_KEY, users);
+  emit();
+}
+
 export function findUser(id: string) {
   return users.find((u) => u.id === id);
 }

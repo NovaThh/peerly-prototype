@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { initUsers } from "@/features/users/store/usersStore";
 import { loadRequests } from "@/features/requests/store/requestsStore";
 import { loadAuth } from "@/shared/store/auth";
+import { seedUsers } from "../scripts/seedUsers";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -16,9 +17,13 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    initUsers();
-    loadRequests();
-    loadAuth();
+    const init = async () => {
+      await initUsers();
+      await loadRequests();
+      await loadAuth();
+      if (__DEV__) await seedUsers();
+    };
+    init();
   }, []);
 
   if (!fontsLoaded) {
